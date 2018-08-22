@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package br.com.ntopus.accesscontrol;
+option java_outer_classname = "AccessControlServer";
+
+service AccessControlService {
+    rpc PutValue(PutRequest) returns (PutResponse);
+    rpc GetValue(GetRequest) returns (GetResponse);
+}
+
+message AddVertex {
+    string label = 1;
+    map<string, string> proprieties = 2;
+}
+
+message GetVertexByCode {
+    string code = 1;
+}
+
+message GetVertexById {
+     int64 id = 1;
+}
+
+message PutRequest {
+    bytes key = 1;
+    bytes value = 2;
+}
+
+message PutResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message GetRequest {
+    bytes key = 1;
+}
+
+message GetResponse {
+    bytes value = 1;
+}
