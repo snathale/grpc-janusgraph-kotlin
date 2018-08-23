@@ -8,10 +8,10 @@ fun main(args: Array<String>) {
 
     val port = 5000
 
-    val server = Server()
+    val server = AccessControlService()
     val s = ServerBuilder.forPort(port).addService(server).build()
     val tmp = s.start()
-    println("Server started, listening on ${port}")
+    println("AccessControlService started, listening on ${port}")
     tmp.awaitTermination()
 }
 

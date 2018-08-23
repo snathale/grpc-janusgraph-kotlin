@@ -1,15 +1,28 @@
+val kotlinVersion = "1.2.61"
 plugins {
     application
     java
     idea
     kotlin("jvm")
+    id("org.jetbrains.kotlin.plugin.jpa") version kotlinVersion
 }
 
 application {
     mainClassName = "br.com.ntopus.accesscontrol.MainKt"
 }
 
-val kotlinVersion = "1.2.61"
+buildscript {
+    val kotlinVersion = "1.2.61"
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:kotlin-noarg:$kotlinVersion")
+    }
+}
+
 dependencies {
     compile(project(":access-control-proto"))
     compile ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
@@ -19,6 +32,8 @@ dependencies {
     compile ("org.janusgraph:janusgraph-cassandra:0.2.1")
     compile ("org.janusgraph:janusgraph-es:0.2.1")
     compile ("org.janusgraph:janusgraph-cql:0.2.1")
+    compile ("org.jetbrains.kotlin:kotlin-runtime:${kotlinVersion}")
+    implementation ("com.github.BAData:protobuf-converter:1.1.5")
 }
 
 idea {

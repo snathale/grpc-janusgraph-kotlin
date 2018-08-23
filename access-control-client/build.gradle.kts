@@ -14,6 +14,7 @@ dependencies {
     compile(project(":access-control-proto"))
     compile ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     compile ("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    implementation ("com.github.BAData:protobuf-converter:1.1.5")
 }
 
 idea {

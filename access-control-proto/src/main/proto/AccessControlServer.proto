@@ -4,37 +4,56 @@ package br.com.ntopus.accesscontrol;
 option java_outer_classname = "AccessControlServer";
 
 service AccessControlService {
-    rpc PutValue(PutRequest) returns (PutResponse);
-    rpc GetValue(GetRequest) returns (GetResponse);
+    rpc AddVertex (AddVertexRequest) returns (VertexResponse);
+    rpc GetVertexById (GetVertexByIdRequest) returns (VertexResponse);
+    rpc GetVertexByCode (GetVertexByCodeRequest) returns (VertexResponse);
 }
 
-message AddVertex {
+message Vertex {
     string label = 1;
-    map<string, string> proprieties = 2;
+    repeated Property properties = 2;
 }
 
-message GetVertexByCode {
+message Property {
+    string name = 1;
+    string value = 2;
+}
+
+message AddVertexRequest {
+    Vertex vertex = 1;
+}
+
+message GetVertexByCodeRequest {
     string code = 1;
 }
 
-message GetVertexById {
-     int64 id = 1;
+message GetVertexByIdRequest {
+    int64 id = 1;
+}
+message VertexResponse {
+    string status = 1;
+    Vertex data = 2;
+    string message = 3;
 }
 
-message PutRequest {
-    bytes key = 1;
-    bytes value = 2;
+message Failure {
+    string cause = 1;
 }
 
-message PutResponse {
-    bool success = 1;
-    string error = 2;
-}
-
-message GetRequest {
-    bytes key = 1;
-}
-
-message GetResponse {
-    bytes value = 1;
-}
+//message PutRequest {
+//    bytes key = 1;
+//    bytes value = 2;
+//}
+//
+//message PutResponse {
+//    bool success = 1;
+//    string error = 2;
+//}
+//
+//message GetRequest {
+//    bytes key = 1;
+//}
+//
+//message GetResponse {
+//    bytes value = 1;
+//}
