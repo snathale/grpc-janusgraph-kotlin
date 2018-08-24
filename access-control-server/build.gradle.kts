@@ -1,5 +1,6 @@
 val kotlinVersion = "1.2.61"
 plugins {
+    val kotlinVersion = "1.2.61"
     application
     java
     idea
@@ -25,13 +26,14 @@ buildscript {
 
 dependencies {
     compile(project(":access-control-proto"))
+    compile(project(":access-control-janusgraph"))
     compile ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     compile ("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     compile ("org.apache.tinkerpop:gremlin-core:3.3.3")
-    compile ("org.janusgraph:janusgraph-core:0.2.1")
-    compile ("org.janusgraph:janusgraph-cassandra:0.2.1")
-    compile ("org.janusgraph:janusgraph-es:0.2.1")
-    compile ("org.janusgraph:janusgraph-cql:0.2.1")
+    compile ("org.janusgraph:janusgraph-core:0.3.0")
+    compile ("org.janusgraph:janusgraph-cassandra:0.3.0")
+    compile ("org.janusgraph:janusgraph-es:0.3.0")
+    compile ("org.janusgraph:janusgraph-cql:0.3.0")
     compile ("org.jetbrains.kotlin:kotlin-runtime:${kotlinVersion}")
     implementation ("com.github.BAData:protobuf-converter:1.1.5")
 }

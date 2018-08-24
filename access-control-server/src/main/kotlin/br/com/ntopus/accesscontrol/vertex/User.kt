@@ -6,7 +6,7 @@ class User(properties: Map<String, String>): IAgent(properties) {
 
 //    companion object {
 //        override fun findByCode(code: String): ICommon {
-//            val g = GraphFactory.open().traversal()
+//            val g = GraphFactory_1.open().traversal()
 //            val values = g.V().hasLabel(VertexLabel.USER.label)
 //                    .has(PropertyLabel.CODE.label, code).valueMap<Vertex>()
 //            val user = User(hashMapOf())

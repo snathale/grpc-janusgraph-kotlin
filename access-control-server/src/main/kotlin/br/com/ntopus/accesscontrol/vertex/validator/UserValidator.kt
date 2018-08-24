@@ -1,10 +1,9 @@
-package br.com.ntopus.accesscontrol.model.vertex.validator
+package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-import br.com.ntopus.accesscontrol.vertex.validator.DefaultValidator
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class UserValidator : DefaultValidator() {

@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  janus:
+    build:
+      dockerfile: ./janusgraph/Dockerfile
+      args:
+        version: 0.3.0
+        hadoop: hadoop2
+      context: ./
+    ports:
+      - "8182:8182"
+      - "8184:8184"
+    user: docker
+    depends_on:
+      - db
+      - index
+    volumes:
+      - ./:/workspace/janusgraph/project
+  db:
+    image: cassandra:3.11
+    ports:
+     # CQL ports (native_transport_port)
+     - "9042:9042"
+     # Thrift (rpc_port)
+     - "9160:9160"
+     # Internode
+     - "7000:7000"
+     - "7001:7001"
+     # JMX
+     - "7199:7199"
+    volumes:
+     - ./data/cassandra:/var/lib/cassandra
+    environment:
+     - CASSANDRA_START_RPC=true
+  index:
+    image: elasticsearch:5.6
+    ports:
+     - "9200:9200"
+     - "9300:9300"
+    volumes:
+     - ./data/elasticsearch/data:/usr/share/elasticsearch/data
+  app:
+    build:
+      dockerfile: ./app/Dockerfile
+      args:
+        kotlin_version: 1.2.61
+      context: ./
+    ports:
+      - "5000:5000"
+    user: docker
+    depends_on:
+      - janus
+    volumes:
+      - ./project/.m2:/home/docker/.m2
+      - ./:/usr/src/mymaven
+      - ./:/workspace/kotlin

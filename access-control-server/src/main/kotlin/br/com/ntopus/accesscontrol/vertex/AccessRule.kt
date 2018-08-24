@@ -17,7 +17,7 @@ class AccessRule(properties: Map<String, String>): ICommon(properties) {
     }
 //    companion object: ICommon {
 //        override fun findByCode(code: String): ICommon {
-//            val g = GraphFactory.open().traversal()
+//            val g = GraphFactory_1.open().traversal()
 //            val values = g.V().hasLabel(VertexLabel.ACCESS_RULE.label)
 //                    .has(PropertyLabel.CODE.label, code).valueMap<Vertex>()
 //            val accessRule = AccessRule(hashMapOf())

@@ -11,7 +11,7 @@ service AccessControlService {
 
 message Vertex {
     string label = 1;
-    repeated Property properties = 2;
+    repeated Property property = 2;
 }
 
 message Property {

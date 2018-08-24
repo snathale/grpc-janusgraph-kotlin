@@ -1,11 +1,11 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.AccessControlServer
-import br.com.ntopus.accesscontrol.graph.GraphFactory
+import main.kotlin.br.com.ntopus.accesscontrol.GraphFactory
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.User
-import br.com.ntopus.accesscontrol.model.vertex.validator.UserValidator
+import br.com.ntopus.accesscontrol.vertex.validator.UserValidator
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse

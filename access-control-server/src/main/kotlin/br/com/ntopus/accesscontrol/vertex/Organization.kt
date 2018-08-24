@@ -1,6 +1,6 @@
 //package br.com.ntopus.accesscontrol.model.vertex
 //
-//import br.com.ntopus.accesscontrol.model.GraphFactory
+//import br.com.ntopus.accesscontrol.model.GraphFactory_1
 //import br.com.ntopus.accesscontrol.model.data.*
 //import br.com.ntopus.accesscontrol.vertex.base.IAgent
 //import br.com.ntopus.accesscontrol.vertex.base.ICommon
@@ -12,7 +12,7 @@
 //class Organization(properties: Map<String, String>): IAgent(properties) {
 //    companion object {
 //        fun findByCode(code: String): ICommon {
-//            val g = GraphFactory.open().traversal()
+//            val g = GraphFactory_1.open().traversal()
 //            val values = g.V().hasLabel(VertexLabel.UNIT_ORGANIZATION.label)
 //                    .has(PropertyLabel.CODE.label, code).valueMap<Vertex>()
 //            val unitOrganization = User(hashMapOf())

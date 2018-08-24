@@ -1,6 +1,6 @@
 //package br.com.ntopus.accesscontrol.model.vertex.mapper
 //
-//import br.com.ntopus.accesscontrol.model.GraphFactory
+//import br.com.ntopus.accesscontrol.model.GraphFactory_1
 //import br.com.ntopus.accesscontrol.vertex.data.Property
 //import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 //import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
@@ -15,7 +15,7 @@
 //import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
 //
 //class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
-//    private val graph = GraphFactory.open()
+//    private val graph = GraphFactory_1.open()
 //    private val accessGroup = AccessGroup(properties)
 //
 //    override fun insert(): JSONResponse {

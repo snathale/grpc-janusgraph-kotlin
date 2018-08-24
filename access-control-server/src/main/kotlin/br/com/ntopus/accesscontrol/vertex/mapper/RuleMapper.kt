@@ -1,6 +1,6 @@
 //package br.com.ntopus.accesscontrol.model.vertex.mapper
 //
-//import br.com.ntopus.accesscontrol.model.GraphFactory
+//import br.com.ntopus.accesscontrol.model.GraphFactory_1
 //import br.com.ntopus.accesscontrol.vertex.data.Property
 //import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 //import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
@@ -15,7 +15,7 @@
 //
 //class RuleMapper (val properties: Map<String, String>): IMapper {
 //    private val rule = Rule(properties)
-//    private val graph = GraphFactory.open()
+//    private val graph = GraphFactory_1.open()
 //
 //    override fun insert(): JSONResponse {
 //        if (!RuleValidator().canInsertVertex(this.rule)) {
