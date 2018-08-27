@@ -6,7 +6,7 @@ import org.janusgraph.core.JanusGraph
 import org.janusgraph.core.JanusGraphTransaction
 import org.janusgraph.core.schema.JanusGraphManagement
 import org.janusgraph.graphdb.database.StandardJanusGraph
-import br.com.ntopus.accesscontrol.GraphSchema
+import br.com.ntopus.accesscontrol.schema.GraphSchema
 import org.apache.tinkerpop.shaded.jackson.databind.ObjectMapper
 import java.io.File
 

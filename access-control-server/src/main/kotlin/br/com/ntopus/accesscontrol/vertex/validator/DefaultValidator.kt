@@ -1,6 +1,6 @@
 package br.com.ntopus.accesscontrol.vertex.validator
 
-import main.kotlin.br.com.ntopus.accesscontrol.GraphFactory
+import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.model.vertex.validator.IValidator
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.base.ICommon

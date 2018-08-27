@@ -47,8 +47,16 @@ dependencies {
 //    get() = srcDirs
 //    set(value) { setSrcDirs(value) }
 
-java.sourceSets {
-    getByName("main") {
-        resources.srcDirs("src/main/resources")
-    }
-}
+//java.sourceSets {
+//    getByName("main") {
+//        java.srcDirs("src/main/kotlin")
+//        resources.srcDirs("src/main/resources")
+//    }
+//}
+//val jar: Jar by tasks
+//jar.apply {
+//    from("src/main/resources") {
+//        include("**/*.properties")
+//        include("**/*.json")
+//    }
+//}

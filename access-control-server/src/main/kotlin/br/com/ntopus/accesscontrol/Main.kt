@@ -13,6 +13,7 @@ fun main(args: Array<String>) {
     val s = ServerBuilder.forPort(port).addService(server).build()
     val tmp = s.start()
     println("AccessControlService started, listening on ${port}")
+
     tmp.awaitTermination()
 }
 

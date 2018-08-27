@@ -25,8 +25,8 @@ buildscript {
 }
 
 dependencies {
-    compile(project(":access-control-proto"))
     compile(project(":access-control-janusgraph"))
+    compile(project(":access-control-proto"))
     compile ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     compile ("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     compile ("org.apache.tinkerpop:gremlin-core:3.3.3")

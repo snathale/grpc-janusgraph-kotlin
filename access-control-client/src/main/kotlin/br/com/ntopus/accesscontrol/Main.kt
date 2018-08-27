@@ -1,7 +1,9 @@
 package br.com.ntopus.accesscontrol
 
-import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.data.Property
 import br.com.ntopus.accesscontrol.data.VertexData
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusRuntimeException
 import net.badata.protobuf.converter.Converter
@@ -15,12 +17,9 @@ fun main(args: Array<String>) {
 
     val properties:List<Property> = listOf(Property("code", "2"), Property("name", "test"))
     val user = VertexData("user", properties)
-
     try {
-        val vertex = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
-        val put = AccessControlServer.AddVertexRequest.newBuilder().setVertex(vertex).build()
-
-        println("Putting ${vertex.label} $properties")
+        val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
+        val put = AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         val response = try {
             stub.addVertex(put)
         } catch (e: StatusRuntimeException) {

@@ -1,7 +1,7 @@
 package br.com.ntopus.accesscontrol.vertex.proto
 
-import br.com.ntopus.accesscontrol.AccessControlServer
 import br.com.ntopus.accesscontrol.StatusResponse
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import net.badata.protobuf.converter.Converter
 

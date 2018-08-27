@@ -1,6 +1,6 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
-import br.com.ntopus.accesscontrol.AccessControlServer
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.base.ProtoResponse
 import br.com.ntopus.accesscontrol.vertex.proto.IProtoResponse
 

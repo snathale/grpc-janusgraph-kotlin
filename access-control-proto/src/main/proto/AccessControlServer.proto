@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package br.com.ntopus.accesscontrol;
+package br.com.ntopus.accesscontrol.proto;
+
 option java_outer_classname = "AccessControlServer";
 
 service AccessControlService {

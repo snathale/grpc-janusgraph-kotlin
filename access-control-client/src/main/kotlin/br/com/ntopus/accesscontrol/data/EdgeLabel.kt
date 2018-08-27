@@ -1,4 +1,4 @@
-package br.com.ntopus.accesscontrol.vertex.data
+package br.com.ntopus.accesscontrol.data
 
 enum class EdgeLabel(val label: String) {
     HAS("has"),

@@ -1,13 +1,16 @@
 package br.com.ntopus.accesscontrol
 
 import br.com.ntopus.accesscontrol.factory.MapperFactory
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 import io.grpc.stub.StreamObserver
 import net.badata.protobuf.converter.Converter
 
 
-class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBase(){
+class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBase() {
+
     override fun addVertex(request: AccessControlServer.AddVertexRequest?, responseObserver: StreamObserver<AccessControlServer.VertexResponse>?) {
         val converter = Converter.create()
         try {

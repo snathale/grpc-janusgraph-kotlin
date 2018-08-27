@@ -1,7 +1,7 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
-import br.com.ntopus.accesscontrol.AccessControlServer
-import main.kotlin.br.com.ntopus.accesscontrol.GraphFactory
+import br.com.ntopus.accesscontrol.factory.GraphFactory
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.User
@@ -15,6 +15,7 @@ class UserMapper (val properties: Map<String, String>): IMapper {
     private val user = User(properties)
 
     private val graph = GraphFactory.open()
+
     override fun insert(): AccessControlServer.VertexResponse {
         try {
             if (!UserValidator().canInsertVertex(this.user)) {

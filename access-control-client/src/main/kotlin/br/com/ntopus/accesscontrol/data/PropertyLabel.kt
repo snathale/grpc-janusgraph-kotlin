@@ -1,4 +1,4 @@
-package br.com.ntopus.accesscontrol.vertex.data
+package br.com.ntopus.accesscontrol.data
 
 enum class PropertyLabel(val label: String) {
     NAME("name"),
