@@ -1,53 +1,39 @@
-//package br.com.ntopus.accesscontrol.model.vertex.mapper
-//
-//import br.com.ntopus.accesscontrol.model.GraphFactory_1
-//import br.com.ntopus.accesscontrol.vertex.data.EdgeLabel
-//import br.com.ntopus.accesscontrol.vertex.data.Property
-//import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-//import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-//import br.com.ntopus.accesscontrol.model.vertex.UnitOrganization
-//import br.com.ntopus.accesscontrol.vertex.base.FAILResponse
-//import br.com.ntopus.accesscontrol.vertex.base.JSONResponse
-//import br.com.ntopus.accesscontrol.vertex.base.SUCCESSResponse
-//import br.com.ntopus.accesscontrol.model.vertex.validator.UnitOrganizationValidator
-//import br.com.ntopus.accesscontrol.vertex.mapper.AgentResponse
-//import br.com.ntopus.accesscontrol.vertex.mapper.EdgeCreated
-//import br.com.ntopus.accesscontrol.vertex.mapper.IMapper
-//import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-//
-//class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
-//    private val unitOrganization = UnitOrganization(properties)
-//    private val graph = GraphFactory_1.open()
-//
-//    override fun insert(): JSONResponse {
-//        try {
-//            if (!UnitOrganizationValidator().canInsertVertex(this.unitOrganization)) {
-//               return FAILResponse(data = "@UOCVE-001 Empty Unit Organization properties")
-//            }
-//            val unitOrganization = graph.addVertex(VertexLabel.UNIT_ORGANIZATION.label)
-//            unitOrganization.property(PropertyLabel.NAME.label, this.unitOrganization.name)
-//            unitOrganization.property(PropertyLabel.CODE.label, this.unitOrganization.code)
-//            unitOrganization.property(PropertyLabel.CREATION_DATE.label, this.unitOrganization.creationDate)
-//            unitOrganization.property(PropertyLabel.ENABLE.label, this.unitOrganization.enable)
-//            if (!this.unitOrganization.observation.isEmpty()) {
-//                unitOrganization.property(PropertyLabel.OBSERVATION.label, this.unitOrganization.observation)
-//            }
-//            graph.tx().commit()
-//            this.unitOrganization.id = unitOrganization.longId()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@UOCVE-002 ${e.message.toString()}")
-//        }
-//        val response = AgentResponse(
-//                this.unitOrganization.id!!,
-//                this.unitOrganization.code,
-//                this.unitOrganization.name,
-//                this.unitOrganization.formatDate(),
-//                this.unitOrganization.enable,
-//                this.unitOrganization.observation)
-//        return SUCCESSResponse(data = response)
-//    }
-//
+package br.com.ntopus.accesscontrol.vertex.mapper
+
+import br.com.ntopus.accesscontrol.factory.GraphFactory
+import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
+import br.com.ntopus.accesscontrol.vertex.UnitOrganization
+import br.com.ntopus.accesscontrol.model.vertex.validator.UnitOrganizationValidator
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+
+class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
+    private val unitOrganization = UnitOrganization(properties)
+    private val graph = GraphFactory.open()
+
+    override fun insert(): AccessControlServer.VertexResponse {
+        try {
+            if (!UnitOrganizationValidator().canInsertVertex(this.unitOrganization)) {
+                return ProtoVertexResponse.createErrorResponse("@UOCVE-001 Empty Unit Organization properties")
+            }
+            val unitOrganization = graph.addVertex(VertexLabel.UNIT_ORGANIZATION.label)
+            unitOrganization.property(PropertyLabel.NAME.label, this.unitOrganization.name)
+            unitOrganization.property(PropertyLabel.CODE.label, this.unitOrganization.code)
+            unitOrganization.property(PropertyLabel.CREATION_DATE.label, this.unitOrganization.creationDate)
+            unitOrganization.property(PropertyLabel.ENABLE.label, this.unitOrganization.enable)
+            if (!this.unitOrganization.observation.isEmpty()) {
+                unitOrganization.property(PropertyLabel.OBSERVATION.label, this.unitOrganization.observation)
+            }
+            graph.tx().commit()
+            this.unitOrganization.id = unitOrganization.longId()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@UOCVE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(this.unitOrganization.mapperToVertexData())
+    }
+
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
 //        if (!UnitOrganizationValidator().isCorrectVertexTarget(target)) {
 //            return FAILResponse(data = "@UOCEE-001 Impossible create edge with target code ${target.code}")
@@ -119,4 +105,4 @@
 //        }
 //        return SUCCESSResponse(data = null)
 //    }
-//}
+}

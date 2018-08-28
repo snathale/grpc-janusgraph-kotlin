@@ -47,5 +47,5 @@ wait_for_startup Cassandra \
     exit 1
 }
 
-bash /workspace/janusgraph/schema/importer.sh
 $BIN/gremlin-server.sh
+bash /workspace/janusgraph/schema/importer.sh

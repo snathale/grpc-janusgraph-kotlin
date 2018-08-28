@@ -5,8 +5,16 @@ import br.com.ntopus.accesscontrol.data.VertexData
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import io.grpc.ManagedChannelBuilder
-import io.grpc.StatusRuntimeException
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.annotation.ProtoClass
+import net.badata.protobuf.converter.annotation.ProtoField
+
+@ProtoClass(AccessControlServer.VertexResponse::class)
+data class VertexResponse(
+        @ProtoField val status: String = "",
+        @ProtoField val data: VertexData = VertexData(),
+        @ProtoField val message: String = ""
+)
 
 fun main(args: Array<String>) {
     println("Running the test client.")
@@ -15,27 +23,24 @@ fun main(args: Array<String>) {
 
     val stub = AccessControlServiceGrpc.newBlockingStub(channel)
 
-    val properties:List<Property> = listOf(Property("code", "2"), Property("name", "test"))
+    val properties: List<Property> = listOf(Property("code", "2"), Property("name", "test2"))
     val user = VertexData("user", properties)
-    try {
-        val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
-        val put = AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
-        val response = try {
-            stub.addVertex(put)
-        } catch (e: StatusRuntimeException) {
-            println("EXCEPTION------->${e.message}")
-        }
-        println("Done putting, $response")
-    }catch (e: Exception) {
-        println("EXCEPTION 1------->${e.message}")
-    }
+    val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
+    val put = AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
+    val response = stub.addVertex(put)
 
+    println("Done putting, $response")
 
+    val get = AccessControlServer.GetVertexByCodeRequest.newBuilder()
+            .setCode("2").setLabel("user").build()
+    val response2 = stub.getVertexByCode(get)
+    println("Get(code=2): $response2")
 
-
-//    val get = AccessControlServer.GetVertexByCodeRequest.newBuilder().setCode("2").build()
-//    val response2 = stub.getVertexByCode(get)
-//
-//    println("Get(code=2): $response2")
+    val responseParser = Converter.create().toDomain(VertexData::class.java, response.data)
+    val id = responseParser.properties[0].value.toLong()
+    val getById = AccessControlServer.GetVertexByIdRequest.newBuilder()
+            .setId(id).build()
+    val response3 = stub.getVertexById(getById)
+    println("GetBydId ($id): $response3")
 }
 

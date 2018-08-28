@@ -4,12 +4,14 @@ import br.com.ntopus.accesscontrol.importer.JanusGraphSchemaImporter
 import org.janusgraph.core.JanusGraph
 import org.janusgraph.core.JanusGraphFactory
 
-class GraphFactory(val config: String?) {
+class GraphFactory(val config: String) {
 
-    private var graph: JanusGraph = this.open()
+    private var graph: JanusGraph? = this.open()
 
     fun open(): JanusGraph {
-        if (this.graph.isOpen) return this.getInstance()
+        if (this.graph != null){
+            return this.getInstance()
+        }
         return JanusGraphFactory.open(config)
     }
 
@@ -22,7 +24,7 @@ class GraphFactory(val config: String?) {
     }
 
     fun getInstance(): JanusGraph {
-        return this.graph
+        return this.graph!!
     }
 
 }

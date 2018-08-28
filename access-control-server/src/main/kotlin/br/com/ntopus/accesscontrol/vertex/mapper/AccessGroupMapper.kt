@@ -1,27 +1,19 @@
-//package br.com.ntopus.accesscontrol.model.vertex.mapper
+//package br.com.ntopus.accesscontrol.vertex.mapper
 //
-//import br.com.ntopus.accesscontrol.model.GraphFactory_1
+//import br.com.ntopus.accesscontrol.factory.GraphFactory
 //import br.com.ntopus.accesscontrol.vertex.data.Property
 //import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 //import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-//import br.com.ntopus.accesscontrol.vertex.AccessGroup
-//import br.com.ntopus.accesscontrol.vertex.base.FAILResponse
-//import br.com.ntopus.accesscontrol.vertex.base.JSONResponse
-//import br.com.ntopus.accesscontrol.vertex.base.SUCCESSResponse
-//import br.com.ntopus.accesscontrol.model.vertex.mapper.graph.AccessGroupEdgeFactory
 //import br.com.ntopus.accesscontrol.model.vertex.validator.AccessGroupValidator
-//import br.com.ntopus.accesscontrol.vertex.mapper.IMapper
-//import br.com.ntopus.accesscontrol.vertex.mapper.PermissionResponse
-//import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
 //
 //class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
-//    private val graph = GraphFactory_1.open()
+//    private val graph = GraphFactory.open()
 //    private val accessGroup = AccessGroup(properties)
 //
 //    override fun insert(): JSONResponse {
 //        if (!AccessGroupValidator().canInsertVertex(this.accessGroup)) {
 //            return FAILResponse(data = "@AGCVE-001 Empty Access Group properties")
-//        }
+////        }
 //        try {
 //            val accessGroup = graph.addVertex(VertexLabel.ACCESS_GROUP.label)
 //            accessGroup.property(PropertyLabel.NAME.label, this.accessGroup.name)

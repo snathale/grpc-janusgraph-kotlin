@@ -25,7 +25,8 @@ message AddVertexRequest {
 }
 
 message GetVertexByCodeRequest {
-    string code = 1;
+    string label = 1;
+    string code = 2;
 }
 
 message GetVertexByIdRequest {

@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
     val server = AccessControlService()
     val s = ServerBuilder.forPort(port).addService(server).build()
     val tmp = s.start()
+//    GraphFactory.setInstance("janusgraph-inmemory.properties")
     println("AccessControlService started, listening on ${port}")
 
     tmp.awaitTermination()

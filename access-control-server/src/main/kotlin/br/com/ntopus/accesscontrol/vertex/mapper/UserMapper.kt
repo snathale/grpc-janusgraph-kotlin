@@ -11,7 +11,6 @@ import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
 class UserMapper (val properties: Map<String, String>): IMapper {
-
     private val user = User(properties)
 
     private val graph = GraphFactory.open()
@@ -20,7 +19,6 @@ class UserMapper (val properties: Map<String, String>): IMapper {
         try {
             if (!UserValidator().canInsertVertex(this.user)) {
                 return ProtoVertexResponse.createErrorResponse("@UCVE-001 Empty User properties")
-//                return ProtoVertexResponseError(message = "@UCVE-001 Empty User properties")
             }
             val user = graph.addVertex(VertexLabel.USER.label)
             user.property(PropertyLabel.NAME.label, this.user.name)
@@ -34,22 +32,12 @@ class UserMapper (val properties: Map<String, String>): IMapper {
             this.user.id = user.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-//            return ProtoVertexResponseError(message = "@UCVE-002 ${e.message.toString()}")
             return ProtoVertexResponse.createErrorResponse("@UCVE-002 ${e.message.toString()}")
         }
-        val vertexData = VertexData(VertexLabel.USER.label, this.userMapperFromVertexData())
-        return ProtoVertexResponse.createSuccessResponse(vertexData)
+        return ProtoVertexResponse.createSuccessResponse(this.user.mapperToVertexData())
     }
 
-    private fun userMapperFromVertexData(): List<Property> {
-        var list: List<Property> = listOf()
-        list+= Property(PropertyLabel.ID.label, this.user.id.toString())
-        list+= Property(PropertyLabel.CODE.label, this.user.code)
-        list+= Property(PropertyLabel.CREATION_DATE.label, this.user.formatDate())
-        list+= Property(PropertyLabel.OBSERVATION.label, this.user.observation)
-        list+= Property(PropertyLabel.ENABLE.label, this.user.enable.toString())
-        return list
-    }
+
 //
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
 //        if (!UserValidator().isCorrectVertexTarget(target)) {

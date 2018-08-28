@@ -1,51 +1,39 @@
-//package br.com.ntopus.accesscontrol.model.vertex.mapper
-//
-//import br.com.ntopus.accesscontrol.model.GraphFactory_1
-//import br.com.ntopus.accesscontrol.vertex.data.EdgeLabel
-//import br.com.ntopus.accesscontrol.vertex.data.Property
-//import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-//import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-//import br.com.ntopus.accesscontrol.model.vertex.Group
-//import br.com.ntopus.accesscontrol.vertex.base.FAILResponse
-//import br.com.ntopus.accesscontrol.vertex.base.JSONResponse
-//import br.com.ntopus.accesscontrol.vertex.base.SUCCESSResponse
-//import br.com.ntopus.accesscontrol.model.vertex.validator.GroupValidator
-//import br.com.ntopus.accesscontrol.vertex.mapper.AgentResponse
-//import br.com.ntopus.accesscontrol.vertex.mapper.EdgeCreated
-//import br.com.ntopus.accesscontrol.vertex.mapper.IMapper
-//import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-//
-//class GroupMapper (val properties: Map<String, String>): IMapper {
-//    private val group = Group(properties)
-//    private val graph = GraphFactory_1.open()
-//
-//    override fun insert(): JSONResponse {
-//        if (!GroupValidator().canInsertVertex(this.group)) {
-//            return FAILResponse(data = "@GCVE-001 Empty Group properties")
-//        }
-//        try {
-//            val group = graph.addVertex(VertexLabel.GROUP.label)
-//            group.property(PropertyLabel.NAME.label, this.group.name)
-//            group.property(PropertyLabel.CODE.label, this.group.code)
-//            if (!this.group.observation.isEmpty()) {
-//                group.property(PropertyLabel.OBSERVATION.label, this.group.observation)
-//            }
-//            group.property(PropertyLabel.CREATION_DATE.label, this.group.creationDate)
-//            group.property(PropertyLabel.ENABLE.label, this.group.enable)
-//            graph.tx().commit()
-//            this.group.id = group.longId()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@GCVE-002 ${e.message.toString()}")
-//        }
-//        val response = AgentResponse(
-//                this.group.id!!,
-//                this.group.code, this.group.name,
-//                this.group.formatDate(), this.group.enable, this.group.observation
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
-//
+package br.com.ntopus.accesscontrol.vertex.mapper
+
+import br.com.ntopus.accesscontrol.factory.GraphFactory
+import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.model.vertex.validator.GroupValidator
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.Group
+import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+
+class GroupMapper (val properties: Map<String, String>): IMapper {
+    private val group = Group(properties)
+    private val graph = GraphFactory.open()
+
+    override fun insert(): AccessControlServer.VertexResponse {
+        if (!GroupValidator().canInsertVertex(this.group)) {
+            return ProtoVertexResponse.createErrorResponse("@GCVE-001 Empty Group properties")
+        }
+        try {
+            val group = graph.addVertex(VertexLabel.GROUP.label)
+            group.property(PropertyLabel.NAME.label, this.group.name)
+            group.property(PropertyLabel.CODE.label, this.group.code)
+            if (!this.group.observation.isEmpty()) {
+                group.property(PropertyLabel.OBSERVATION.label, this.group.observation)
+            }
+            group.property(PropertyLabel.CREATION_DATE.label, this.group.creationDate)
+            group.property(PropertyLabel.ENABLE.label, this.group.enable)
+            graph.tx().commit()
+            this.group.id = group.longId()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@GCVE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(this.group.mapperToVertexData())
+    }
+
 //    override fun updateProperty(properties: List<Property>): JSONResponse {
 //        val group = GroupValidator().hasVertex(this.group.code)
 //                ?: return FAILResponse(data = "@GUPE-001 Impossible find Group with code ${this.group.code}")
@@ -108,4 +96,4 @@
 //        val response = EdgeCreated(VertexInfo(VertexLabel.GROUP.label, this.group.code), target, EdgeLabel.HAS.label)
 //        return SUCCESSResponse(data = response)
 //    }
-//}
+}
