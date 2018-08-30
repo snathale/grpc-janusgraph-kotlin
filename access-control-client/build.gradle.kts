@@ -16,6 +16,7 @@ dependencies {
     compile ("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     compile ("com.google.guava:guava:26.0-jre")
     implementation ("com.github.BAData:protobuf-converter:1.1.5")
+    compile ("io.github.microutils:kotlin-logging:1.5.9")
 }
 
 idea {

@@ -9,16 +9,17 @@ abstract class IAgent(properties: Map<String, String>): IDefaultCommon(propertie
 
     var observation: String = this.toString(properties["observation"])
 
-    override fun mapperToVertexData(): VertexData {
+    override fun mapperToVertexData(label: String): VertexData {
         var list: List<Property> = listOf()
         list+= Property(PropertyLabel.ID.label, this.id.toString())
+        list+= Property(PropertyLabel.NAME.label, this.name)
         list+= Property(PropertyLabel.CODE.label, this.code)
         list+= Property(PropertyLabel.CREATION_DATE.label, this.formatDate())
         if (!this.observation.isEmpty()) {
             list+= Property(PropertyLabel.OBSERVATION.label, this.observation)
         }
         list+= Property(PropertyLabel.ENABLE.label, this.enable.toString())
-        return VertexData(VertexLabel.USER.label, list)
+        return VertexData(label, list)
     }
 
 }

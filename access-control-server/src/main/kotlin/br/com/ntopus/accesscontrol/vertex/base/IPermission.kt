@@ -9,7 +9,7 @@ abstract class IPermission(properties: Map<String, String>): IDefaultCommon(prop
 
     var description: String = this.toString(properties["description"])
 
-    override fun mapperToVertexData(): VertexData {
+    override fun mapperToVertexData(label: String): VertexData {
         var list: List<Property> = listOf()
         list+= Property(PropertyLabel.ID.label, this.id.toString())
         list+= Property(PropertyLabel.CODE.label, this.code)
@@ -18,7 +18,7 @@ abstract class IPermission(properties: Map<String, String>): IDefaultCommon(prop
             list+= Property(PropertyLabel.OBSERVATION.label, this.description)
         }
         list+= Property(PropertyLabel.ENABLE.label, this.enable.toString())
-        return VertexData(VertexLabel.USER.label, list)
+        return VertexData(label, list)
     }
 
 }

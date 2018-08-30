@@ -33,6 +33,7 @@ dependencies {
     compile ("io.grpc:grpc-netty-shaded:$grpcVersion")
     compile ("io.grpc:grpc-protobuf:$grpcVersion")
     compile ("io.grpc:grpc-stub:$grpcVersion")
+    testCompile ("io.grpc:grpc-testing:${grpcVersion}")
 }
 
 protobuf.protobuf.run {

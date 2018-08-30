@@ -1,6 +1,10 @@
-package br.com.ntopus.accesscontrol.model.vertex
+package br.com.ntopus.accesscontrol.vertex
 
 import br.com.ntopus.accesscontrol.vertex.base.ICommon
+import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import com.google.gson.annotations.SerializedName
 import java.text.SimpleDateFormat
 import java.util.*
@@ -15,22 +19,16 @@ class AccessRule(properties: Map<String, String>): ICommon(properties) {
         if (this.expirationDate == null) return null
         return format.format(this.expirationDate)
     }
-//    companion object: ICommon {
-//        override fun findByCode(code: String): ICommon {
-//            val g = GraphFactory_1.open().traversal()
-//            val values = g.V().hasLabel(VertexLabel.ACCESS_RULE.label)
-//                    .has(PropertyLabel.CODE.label, code).valueMap<Vertex>()
-//            val accessRule = AccessRule(hashMapOf())
-//            for (item in values) {
-//                accessRule.name = item.get(PropertyLabel.NAME.label).toString()
-//                accessRule.code = item.get(PropertyLabel.CODE.label).toString()
-//                accessRule.enable = item.get(PropertyLabel.ENABLE.label) as Boolean
-//                accessRule.observation = item.get(PropertyLabel.OBSERVATION.label).toString()
-//                accessRule.creationDate = item.get(PropertyLabel.CREATION_DATE.label) as Date
-//            }
-//            return accessRule
-//        }
-//    }
 
+    override fun mapperToVertexData(label: String): VertexData {
+        var list: List<Property> = listOf()
+        list+= Property(PropertyLabel.ID.label, this.id.toString())
+        list+= Property(PropertyLabel.CODE.label, this.code)
+        if (this.formatDate() != null) {
+            list+= Property(PropertyLabel.EXPIRATION_DATE.label, this.toString(this.formatDate()))
+        }
+        list+= Property(PropertyLabel.ENABLE.label, this.enable.toString())
+        return VertexData(VertexLabel.ACCESS_RULE.label, list)
+    }
 
 }

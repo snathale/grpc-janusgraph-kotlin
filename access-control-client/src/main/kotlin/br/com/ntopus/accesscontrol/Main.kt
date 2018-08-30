@@ -26,6 +26,8 @@ fun main(args: Array<String>) {
     val properties: List<Property> = listOf(Property("code", "2"), Property("name", "test2"))
     val user = VertexData("user", properties)
     val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
+    print(converter
+    )
     val put = AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
     val response = stub.addVertex(put)
 

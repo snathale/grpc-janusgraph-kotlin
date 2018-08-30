@@ -32,11 +32,7 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoVertexResponse.createErrorResponse("@RCVE-002 ${e.message.toString()}")
         }
-        val response = PermissionResponse(
-                this.rule.id!!,
-                this.rule.code, this.rule.name, this.rule.formatDate(), this.rule.description, this.rule.enable
-        )
-        return ProtoVertexResponse.createSuccessResponse(this.rule.mapperToVertexData())
+        return ProtoVertexResponse.createSuccessResponse(this.rule.mapperToVertexData(VertexLabel.RULE.label))
     }
 
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {

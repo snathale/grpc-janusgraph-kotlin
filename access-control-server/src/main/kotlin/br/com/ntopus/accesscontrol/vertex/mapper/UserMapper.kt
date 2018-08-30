@@ -6,8 +6,6 @@ import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.User
 import br.com.ntopus.accesscontrol.vertex.validator.UserValidator
-import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
 class UserMapper (val properties: Map<String, String>): IMapper {
@@ -34,7 +32,7 @@ class UserMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoVertexResponse.createErrorResponse("@UCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.user.mapperToVertexData())
+        return ProtoVertexResponse.createSuccessResponse(this.user.mapperToVertexData(VertexLabel.USER.label))
     }
 
 

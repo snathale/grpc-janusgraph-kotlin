@@ -31,7 +31,7 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoVertexResponse.createErrorResponse("@GCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.group.mapperToVertexData())
+        return ProtoVertexResponse.createSuccessResponse(this.group.mapperToVertexData(VertexLabel.GROUP.label))
     }
 
 //    override fun updateProperty(properties: List<Property>): JSONResponse {

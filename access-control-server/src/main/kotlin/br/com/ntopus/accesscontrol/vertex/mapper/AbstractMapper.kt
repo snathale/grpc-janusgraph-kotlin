@@ -38,6 +38,7 @@ object AbstractMapper {
 
     fun parseVertexToVertexData(vertex: Vertex): VertexData {
         var list: List<Property> = listOf()
+        list += Property(PropertyLabel.ID.label, toString(vertex.id()))
         for (item in vertex.properties<Vertex>()) {
             if (item.key() == PropertyLabel.EXPIRATION_DATE.label || item.key() == PropertyLabel.CREATION_DATE.label ){
                 list+= Property(item.key(), parseMapValueDate(item.value().toString())!!)

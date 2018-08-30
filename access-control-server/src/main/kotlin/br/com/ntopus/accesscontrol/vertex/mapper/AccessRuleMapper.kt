@@ -1,51 +1,37 @@
-//package br.com.ntopus.accesscontrol.model.vertex.mapper
-//
-//import br.com.ntopus.accesscontrol.model.GraphFactory_1
-//import br.com.ntopus.accesscontrol.vertex.data.EdgeLabel
-//import br.com.ntopus.accesscontrol.vertex.data.Property
-//import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-//import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-//import br.com.ntopus.accesscontrol.model.vertex.AccessRule
-//import br.com.ntopus.accesscontrol.vertex.base.FAILResponse
-//import br.com.ntopus.accesscontrol.vertex.base.JSONResponse
-//import br.com.ntopus.accesscontrol.vertex.base.SUCCESSResponse
-//import br.com.ntopus.accesscontrol.model.vertex.validator.AccessRuleValidator
-//import br.com.ntopus.accesscontrol.vertex.mapper.AssociationResponse
-//import br.com.ntopus.accesscontrol.vertex.mapper.EdgeCreated
-//import br.com.ntopus.accesscontrol.vertex.mapper.IMapper
-//import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-//import org.apache.tinkerpop.gremlin.structure.Vertex
-//import java.text.SimpleDateFormat
-//
-//class AccessRuleMapper (val properties: Map<String, String>): IMapper {
-//    private val accessRule = AccessRule(properties)
-//    private val graph = GraphFactory_1.open()
-//
-//    override fun insert(): JSONResponse {
-//        if (!AccessRuleValidator().canInsertVertex(this.accessRule)) {
-//            return FAILResponse(data = "@ARCVE-001 Empty Access Rule properties")
-//        }
-//        try {
-//            val accessRule = graph.addVertex(VertexLabel.ACCESS_RULE.label)
-//            accessRule.property(PropertyLabel.CODE.label, this.accessRule.code)
-//            accessRule.property(PropertyLabel.ENABLE.label, this.accessRule.enable)
-//            if (this.accessRule.expirationDate != null) {
-//                accessRule.property(PropertyLabel.EXPIRATION_DATE.label, this.accessRule.expirationDate)
-//            }
-//            graph.tx().commit()
-//            this.accessRule.id = accessRule.longId()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@ARCVE-002 ${e.message.toString()}")
-//        }
-//        val response = AssociationResponse(
-//                this.accessRule.id!!,
-//                this.accessRule.code,
-//                this.accessRule.formatDate(),
-//                this.accessRule.enable)
-//        return SUCCESSResponse(data = response)
-//    }
-//
+package br.com.ntopus.accesscontrol.vertex.mapper
+
+import br.com.ntopus.accesscontrol.factory.GraphFactory
+import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
+import br.com.ntopus.accesscontrol.vertex.AccessRule
+import br.com.ntopus.accesscontrol.vertex.validator.AccessRuleValidator
+import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+
+class AccessRuleMapper (val properties: Map<String, String>): IMapper {
+    private val accessRule = AccessRule(properties)
+    private val graph = GraphFactory.open()
+
+    override fun insert(): AccessControlServer.VertexResponse {
+        if (!AccessRuleValidator().canInsertVertex(this.accessRule)) {
+            return ProtoVertexResponse.createErrorResponse("@ARCVE-001 Empty Access Rule properties")
+        }
+        try {
+            val accessRule = graph.addVertex(VertexLabel.ACCESS_RULE.label)
+            accessRule.property(PropertyLabel.CODE.label, this.accessRule.code)
+            accessRule.property(PropertyLabel.ENABLE.label, this.accessRule.enable)
+            if (this.accessRule.expirationDate != null) {
+                accessRule.property(PropertyLabel.EXPIRATION_DATE.label, this.accessRule.expirationDate)
+            }
+            graph.tx().commit()
+            this.accessRule.id = accessRule.longId()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@ARCVE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(this.accessRule.mapperToVertexData())
+    }
+
 //    override fun updateProperty(properties: List<Property>): JSONResponse {
 //        val accessRule = AccessRuleValidator().hasVertex(this.accessRule.code)
 //                ?: return FAILResponse(data = "@ARUPE-001 Impossible find Access Rule with code ${this.accessRule.code}")
@@ -131,4 +117,4 @@
 //        val source = VertexInfo(VertexLabel.ACCESS_RULE.label, this.accessRule.code)
 //        return SUCCESSResponse(data = EdgeCreated(source, target, EdgeLabel.OWN.label))
 //    }
-//}
+}

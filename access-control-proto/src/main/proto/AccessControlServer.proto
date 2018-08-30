@@ -5,9 +5,9 @@ package br.com.ntopus.accesscontrol.proto;
 option java_outer_classname = "AccessControlServer";
 
 service AccessControlService {
-    rpc AddVertex (AddVertexRequest) returns (VertexResponse);
-    rpc GetVertexById (GetVertexByIdRequest) returns (VertexResponse);
-    rpc GetVertexByCode (GetVertexByCodeRequest) returns (VertexResponse);
+    rpc AddVertex (AddVertexRequest) returns (VertexResponse) {}
+    rpc GetVertexById (GetVertexByIdRequest) returns (VertexResponse) {}
+    rpc GetVertexByCode (GetVertexByCodeRequest) returns (VertexResponse) {}
 }
 
 message Vertex {

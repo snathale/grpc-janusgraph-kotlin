@@ -1,11 +1,10 @@
-package br.com.ntopus.accesscontrol.model.vertex.validator
+package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.base.ICommon
 import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-import br.com.ntopus.accesscontrol.vertex.validator.DefaultValidator
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class AccessRuleValidator: DefaultValidator() {
@@ -47,7 +46,6 @@ class AccessRuleValidator: DefaultValidator() {
     }
 
     override fun isCorrectVertexTarget(target: VertexInfo): Boolean {
-        val g = graph.traversal()
         return when(target.label) {
             VertexLabel.ACCESS_GROUP.label -> target.label == VertexLabel.ACCESS_GROUP.label
             VertexLabel.GROUP.label -> target.label == VertexLabel.GROUP.label

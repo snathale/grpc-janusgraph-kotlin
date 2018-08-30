@@ -36,6 +36,10 @@ dependencies {
     compile ("org.janusgraph:janusgraph-cql:0.3.0")
     compile ("org.jetbrains.kotlin:kotlin-runtime:${kotlinVersion}")
     implementation ("com.github.BAData:protobuf-converter:1.1.5")
+    testCompile("junit:junit:4.11")
+    testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    compile ("org.mockito:mockito-all:1.9.5")
+    compile ("org.slf4j:slf4j-simple:1.7.25")
 }
 
 idea {

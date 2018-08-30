@@ -31,7 +31,7 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoVertexResponse.createErrorResponse("@UOCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.unitOrganization.mapperToVertexData())
+        return ProtoVertexResponse.createSuccessResponse(this.unitOrganization.mapperToVertexData(VertexLabel.UNIT_ORGANIZATION.label))
     }
 
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {

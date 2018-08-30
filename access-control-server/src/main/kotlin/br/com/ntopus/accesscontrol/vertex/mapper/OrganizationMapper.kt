@@ -31,7 +31,7 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoVertexResponse.createErrorResponse("@OCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.organization.mapperToVertexData())
+        return ProtoVertexResponse.createSuccessResponse(this.organization.mapperToVertexData(VertexLabel.ORGANIZATION.label))
     }
 
 

@@ -19,5 +19,5 @@ abstract class ICommon(properties: Map<String, String>) {
 
     abstract fun formatDate(): String?
 
-    abstract fun mapperToVertexData(): VertexData
+    abstract fun mapperToVertexData(label: String = ""): VertexData
 }
