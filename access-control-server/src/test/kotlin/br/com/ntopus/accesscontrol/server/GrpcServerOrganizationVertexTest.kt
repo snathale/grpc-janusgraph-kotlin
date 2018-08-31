@@ -183,4 +183,24 @@ class GrpcServerOrganizationVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(response1.hasData())
         Assert.assertFalse(g.V().hasLabel("organization").has("code", "2").hasNext())
     }
+
+    override fun updateProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdateDefaultProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun deleteVertex() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantDeleteVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

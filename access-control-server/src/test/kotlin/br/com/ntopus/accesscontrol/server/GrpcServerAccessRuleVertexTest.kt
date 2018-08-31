@@ -166,4 +166,24 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertEquals("@ARCVE-001 Empty Access Rule properties", response.message)
         Assert.assertFalse(g.V().hasLabel("accessRule").has("expirationDate", expirationDate).hasNext())
     }
+
+    override fun updateProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdateDefaultProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun deleteVertex() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantDeleteVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

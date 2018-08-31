@@ -166,4 +166,56 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertEquals("@RCVE-001 Empty Rule properties", response.message)
         Assert.assertFalse(response.hasData())
     }
+
+    @Test
+    override fun updateProperty() {
+        val properties : List<Property> = listOf(Property("name", "Test"), Property("description", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("rule").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertPermissionVertexGrpcResponse("rule", id,"1", "Test", date, "Property updated", true, response)
+        this.assertPermissionMapper("rule", "1", "Test", date, "Property updated", true,  id.toString())
+    }
+
+    @Test
+    override fun cantUpdateDefaultProperty() {
+        val properties : List<Property> = listOf(Property("name", "Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("rule").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@RUPE-002 Rule property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertPermissionMapper("rule", "1", "ADD_USER", date, "This is a Rule Add User", true, id.toString())
+    }
+
+    @Test
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        val properties : List<Property> = listOf(Property("name", "Test"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(1).setLabel("rule").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("RUPE-001 Impossible find Rule with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("rule").has("name", "Test").hasNext())
+    }
+
+    @Test
+    override fun deleteVertex() {
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("rule").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertPermissionMapper("rule", "1", "ADD_USER", date,"This is a Rule Add User", false, id.toString())
+    }
+
+    @Test
+    override fun cantDeleteVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

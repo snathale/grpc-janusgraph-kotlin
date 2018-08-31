@@ -183,4 +183,69 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         Assert.assertFalse(response1.hasData())
         Assert.assertFalse(g.V().hasLabel(VertexLabel.USER.label).has(PropertyLabel.CODE.label, "2").hasNext())
     }
+
+    @Test
+    override fun updateProperty() {
+        val properties : List<Property> = listOf(Property("name", "Unit Organization Test"), Property("observation", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("unitOrganization").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertAgentVertexGrpcResponse("unitOrganization", id,"1", "Unit Organization Test", date, "Property updated", true, response)
+        this.assertAgentMapper("unitOrganization", "1", "Unit Organization Test", date, "Property updated", true)
+    }
+
+    @Test
+    override fun cantUpdateDefaultProperty() {
+        val properties : List<Property> = listOf(Property("name", "Unit Organization Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("unitOrganization").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UOUPE-002 Unit Organization property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("unitOrganization", "1", "Bahia", date, "This is a Unit Organization", true, id.toString())
+    }
+
+    @Test
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        val properties : List<Property> = listOf(
+                Property("name", "Unit Organization Test"),
+                Property("description", "New Description")
+        )
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(1).setLabel("unitOrganization").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UOCEE-001 Impossible find Unit Organization with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("unitOrganization")
+                .has("name", "Unit Organization Test")
+                .has("description", "New Description").hasNext()
+        )
+    }
+
+    @Test
+    override fun deleteVertex() {
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("unitOrganization").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("unitOrganization", "1", "Bahia",   date, "This is a Unit Organization", false, id.toString())
+    }
+
+    @Test
+    override fun cantDeleteVertexThatNotExist() {
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(1).setLabel("unitOrganization").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UODE-001 Impossible find Unit Organization with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("unitOrganization").has("id", 1).hasNext())
+    }
 }

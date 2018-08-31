@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @RunWith(JUnit4::class)
-class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
+class GrpcServerUserVertexTest : GrpcServerTestHelper(), IVertexTests {
 
     @get: Rule
     val grpcCleanup: GrpcCleanupRule = GrpcCleanupRule()
@@ -85,8 +85,7 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun getVertexByCode() {
         val vertex = VertexByCode("user", "1")
-        val converter = Converter.create().
-                toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
+        val converter = Converter.create().toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
         val response = stub!!.getVertexByCode(
                 AccessControlServer.GetVertexByCodeRequest.newBuilder(converter).build()
         )
@@ -107,7 +106,7 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     fun getVertexByIdThatNotExist() {
-       val response = stub!!.getVertexById(
+        val response = stub!!.getVertexById(
                 AccessControlServer.GetVertexByIdRequest.newBuilder().setId(1).build()
         )
         assertEquals("error", response.status)
@@ -118,8 +117,7 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     fun getVertexByCodeThatNotExist() {
         val vertex = VertexByCode("user", "2")
-        val converter = Converter.create().
-                toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
+        val converter = Converter.create().toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
         val response = stub!!.getVertexByCode(
                 AccessControlServer.GetVertexByCodeRequest.newBuilder(converter).build()
         )
@@ -186,5 +184,64 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertEquals("@UCVE-001 Empty User properties", response1.message)
         Assert.assertFalse(response1.hasData())
         Assert.assertFalse(g.V().hasLabel("user").has("name", "test").hasNext())
+    }
+
+    @Test
+    override fun updateProperty() {
+        val properties: List<Property> = listOf(Property("name", "Test"), Property("observation", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(userId).setLabel("user").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertAgentVertexGrpcResponse("user", userId,"1", "Test", date, "Property updated", true, response)
+        this.assertAgentMapper("user", "1", "Test", date, "Property updated", true)
+    }
+
+    @Test
+    override fun cantUpdateDefaultProperty() {
+        val properties : List<Property> = listOf(Property("name", "Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(userId).setLabel("user").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UUPE-002 User property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("user", "1", "UserTest", date, "This is UserTest", true, userId.toString())
+    }
+
+    @Test
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        val properties : List<Property> = listOf(Property("name", "Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(1).setLabel("user").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UUPE-001 Impossible find User with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("user").has("name", "Test").has("code", "2").hasNext())
+    }
+
+    @Test
+    override fun deleteVertex() {
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(userId).setLabel("user").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("user", "1", "UserTest", date, "This is UserTest", false, userId.toString())
+    }
+
+    @Test
+    override fun cantDeleteVertexThatNotExist() {
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(1).setLabel("user").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UDE-001 Impossible find User with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("user").has("id", 1).hasNext())
     }
 }

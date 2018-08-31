@@ -6,7 +6,9 @@ import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.AccessRule
 import br.com.ntopus.accesscontrol.vertex.validator.AccessRuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import java.text.SimpleDateFormat
 
 class AccessRuleMapper (val properties: Map<String, String>): IMapper {
     private val accessRule = AccessRule(properties)
@@ -32,37 +34,28 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
         return ProtoVertexResponse.createSuccessResponse(this.accessRule.mapperToVertexData())
     }
 
-//    override fun updateProperty(properties: List<Property>): JSONResponse {
-//        val accessRule = AccessRuleValidator().hasVertex(this.accessRule.code)
-//                ?: return FAILResponse(data = "@ARUPE-001 Impossible find Access Rule with code ${this.accessRule.code}")
-//        if (!AccessRuleValidator().canUpdateVertexProperty(properties)) {
-//            return FAILResponse(data = "@ARUPE-002 Access Rule property can be updated")
-//        }
-//        try {
-//            for (property in properties) {
-//                if (property.name == PropertyLabel.EXPIRATION_DATE.label) {
-//                    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//                    accessRule.property(property.name, format.parse(property.value))
-//                    continue
-//                }
-//                accessRule.property(property.name, property.value)
-//            }
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@ARUPE-002 ${e.message.toString()}")
-//        }
-//        val traversal = graph.traversal().V().hasLabel(VertexLabel.ACCESS_RULE.label)
-//                .has(PropertyLabel.CODE.label, this.accessRule.code).next()
-//        val values = AbstractMapper.parseMapVertex(traversal)
-//        val response = AssociationResponse(
-//                accessRule.id() as Long,
-//                this.accessRule.code,
-//                AbstractMapper.parseMapValueDate(values[PropertyLabel.EXPIRATION_DATE.label].toString())!!,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.ENABLE.label].toString()).toBoolean()
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
+    override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
+        val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@ARUPE-001 Impossible find Access Rule with code ${this.accessRule.code}")
+        if (!AccessRuleValidator().canUpdateVertexProperty(properties)) {
+            return ProtoVertexResponse.createErrorResponse("@ARUPE-002 Access Rule property can be updated")
+        }
+        try {
+            for (property in properties) {
+                if (property.name == PropertyLabel.EXPIRATION_DATE.label) {
+                    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+                    accessRule.property(property.name, format.parse(property.value))
+                    continue
+                }
+                accessRule.property(property.name, property.value)
+            }
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@ARUPE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(accessRule))
+    }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id!!)

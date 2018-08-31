@@ -165,4 +165,24 @@ class GrpcServerGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(response.hasData())
         Assert.assertFalse(g.V().hasLabel("group").has("code", "2").hasNext())
     }
+
+    override fun updateProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdateDefaultProperty() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantUpdatePropertyFromVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun deleteVertex() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantDeleteVertexThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

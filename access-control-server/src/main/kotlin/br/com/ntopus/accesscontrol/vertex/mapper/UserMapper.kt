@@ -59,11 +59,11 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
 //    }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
-        val user = UserValidator().hasVertex(this.user.id!!)
+        val user = UserValidator().hasVertex(this.user.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@UUPE-001 Impossible find User with id ${this.user.id}")
 
         if (!UserValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse( "@UUPE-002 User property can be updated")
+            return ProtoVertexResponse.createErrorResponse("@UUPE-002 User property can be updated")
         }
 
         try {
@@ -79,7 +79,7 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
-        val user = UserValidator().hasVertex(this.user.id!!)
+        val user = UserValidator().hasVertex(this.user.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@UDE-001 Impossible find User with id ${this.user.id}")
         try {
             user.property(PropertyLabel.ENABLE.label, false)

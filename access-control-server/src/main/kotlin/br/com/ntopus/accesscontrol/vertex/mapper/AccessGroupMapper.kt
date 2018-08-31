@@ -6,6 +6,7 @@ import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.validator.AccessGroupValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.AccessGroup
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
 class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
@@ -53,35 +54,24 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 //        return edgeForTarget.createEdge(vSource, vTarget, target, this.accessGroup.code)
 //    }
 
-//    override fun updateProperty(properties: List<Property>): JSONResponse {
-//        val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.code)
-//                ?: return FAILResponse(data = "AGUPE-001 Impossible find Access Group with code ${this.accessGroup.code}")
-//        if (!AccessGroupValidator().canUpdateVertexProperty(properties)) {
-//            return FAILResponse(data = "@AGUPE-002 Access Group property can be updated")
-//        }
-//
-//        try {
-//            for (property in properties) {
-//                accessGroup.property(property.name, property.value)
-//            }
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@AGUPE-003 ${e.message.toString()}")
-//        }
-//        val traversal = graph.traversal().V().hasLabel(VertexLabel.ACCESS_GROUP.label)
-//                .has(PropertyLabel.CODE.label, this.accessGroup.code).next()
-//        val values = AbstractMapper.parseMapVertex(traversal)
-//        val response = PermissionResponse(
-//                accessGroup.id() as Long,
-//                this.accessGroup.code,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.NAME.label].toString()),
-//                AbstractMapper.parseMapValueDate(values[PropertyLabel.CREATION_DATE.label].toString())!!,
-//                AbstractMapper.parseMapValue((values[PropertyLabel.DESCRIPTION.label].toString())),
-//                AbstractMapper.parseMapValue(values[PropertyLabel.ENABLE.label].toString()).toBoolean()
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
+    override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
+        val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("AGUPE-001 Impossible find Access Group with id ${this.accessGroup.id}")
+        if (!AccessGroupValidator().canUpdateVertexProperty(properties)) {
+            return ProtoVertexResponse.createErrorResponse("@AGUPE-002 Access Group property can be updated")
+        }
+
+        try {
+            for (property in properties) {
+                accessGroup.property(property.name, property.value)
+            }
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@AGUPE-003 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(accessGroup))
+    }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id!!)
