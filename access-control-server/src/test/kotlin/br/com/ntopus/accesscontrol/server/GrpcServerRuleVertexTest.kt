@@ -216,6 +216,13 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     override fun cantDeleteVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(1).setLabel("rule").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@RDE-001 Impossible find Rule with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("rule").hasId(1).hasNext())
     }
 }

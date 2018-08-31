@@ -242,6 +242,6 @@ class GrpcServerUserVertexTest : GrpcServerTestHelper(), IVertexTests {
         Assert.assertEquals("@UDE-001 Impossible find User with id 1", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("user").has("id", 1).hasNext())
+        Assert.assertFalse(g.V().hasLabel("user").hasId(1).hasNext())
     }
 }

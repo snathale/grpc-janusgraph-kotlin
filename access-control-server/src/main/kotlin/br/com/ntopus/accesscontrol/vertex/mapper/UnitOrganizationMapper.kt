@@ -63,7 +63,7 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val unitOrganization = UnitOrganizationValidator()
-                .hasVertex(this.unitOrganization.id!!)
+                .hasVertex(this.unitOrganization.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@UOCEE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}"
                 )
         if (!UnitOrganizationValidator().canUpdateVertexProperty(properties)) {
@@ -83,7 +83,7 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val unitOrganization = UnitOrganizationValidator()
-                .hasVertex(this.unitOrganization.id!!)
+                .hasVertex(this.unitOrganization.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@UODE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}")
         try {
             unitOrganization.property(PropertyLabel.ENABLE.label, false)

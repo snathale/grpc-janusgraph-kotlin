@@ -37,7 +37,7 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
 
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
-        val rule = RuleValidator().hasVertex(this.rule.id!!)
+        val rule = RuleValidator().hasVertex(this.rule.id)
                 ?: return ProtoVertexResponse.createErrorResponse("RUPE-001 Impossible find Rule with id ${this.rule.id}")
 
         if (!RuleValidator().canUpdateVertexProperty(properties)) {
@@ -56,8 +56,8 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
-        val rule = RuleValidator().hasVertex(this.rule.id!!)
-                ?: return ProtoVertexResponse.createErrorResponse("@RDE-001 Impossible find Rule with code ${this.rule.code}")
+        val rule = RuleValidator().hasVertex(this.rule.id)
+                ?: return ProtoVertexResponse.createErrorResponse("@RDE-001 Impossible find Rule with id ${this.rule.id}")
         try {
             rule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

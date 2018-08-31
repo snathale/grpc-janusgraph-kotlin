@@ -36,7 +36,7 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
     }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
-        val group = GroupValidator().hasVertex(this.group.id!!)
+        val group = GroupValidator().hasVertex(this.group.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@GUPE-001 Impossible find Group with id ${this.group.id}")
 
         if (!GroupValidator().canUpdateVertexProperty(properties)) {
@@ -55,7 +55,7 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
-        val group = GroupValidator().hasVertex(this.group.id!!)
+        val group = GroupValidator().hasVertex(this.group.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@GDE-001 Impossible find Group with id ${this.group.code}")
         try {
             group.property(PropertyLabel.ENABLE.label, false)

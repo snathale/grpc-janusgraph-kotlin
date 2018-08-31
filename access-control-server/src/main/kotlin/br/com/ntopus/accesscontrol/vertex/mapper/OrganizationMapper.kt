@@ -59,7 +59,7 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val organization = OrganizationValidator()
-                .hasVertex(this.organization.id!!)
+                .hasVertex(this.organization.id)
                 ?: return ProtoVertexResponse.createErrorResponse("@OUPE-001 Impossible find Organization with id ${this.organization.id}")
 
         if (!OrganizationValidator().canUpdateVertexProperty(properties)) {
@@ -79,9 +79,9 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val organization = OrganizationValidator()
-                .hasVertex(this.organization.id!!)
+                .hasVertex(this.organization.id)
                 ?: return ProtoVertexResponse.createErrorResponse(
-                        "@UDE-001 Impossible find User with id ${this.organization.id}")
+                        "@ODE-001 Impossible find Organization with id ${this.organization.id}")
         try {
             organization.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

@@ -184,23 +184,62 @@ class GrpcServerOrganizationVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(g.V().hasLabel("organization").has("code", "2").hasNext())
     }
 
+    @Test
     override fun updateProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "Organization Test"), Property("observation", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("organization").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertAgentMapper("organization", "1", "Organization Test", date, "Property updated", true, id.toString())
+        this.assertAgentVertexGrpcResponse("organization", id, "1", "Organization Test", date, "Property updated", true, response)
     }
 
+    @Test
     override fun cantUpdateDefaultProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "Organization Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("organization").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@OUPE-002 Organization property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("organization", "1", "Kofre", date, "This is a Organization", true, id.toString())
     }
 
+    @Test
     override fun cantUpdatePropertyFromVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "New Organization Test"), Property("code", "1"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(1).setLabel("organization").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@OUPE-001 Impossible find Organization with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("organization").has("name", "New Organization Test").has("code", "1").hasNext())
     }
 
+    @Test
     override fun deleteVertex() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("organization").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertAgentMapper("organization", "1", "Kofre", date, "This is a Organization", false, id.toString())
     }
 
+    @Test
     override fun cantDeleteVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(1).setLabel("organization").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ODE-001 Impossible find Organization with id 1", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("organization").hasId(1).hasNext())
     }
 }
