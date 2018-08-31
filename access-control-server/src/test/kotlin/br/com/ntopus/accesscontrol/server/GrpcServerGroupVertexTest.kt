@@ -14,17 +14,19 @@ import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
 import net.badata.protobuf.converter.Converter
-import org.junit.*
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @RunWith(JUnit4::class)
-class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
+class GrpcServerGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @get: Rule
     val grpcCleanup: GrpcCleanupRule = GrpcCleanupRule()
@@ -33,7 +35,7 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     private val date: Date = Date()
 
-    private var userId: Long = 0
+    private var id: Long = 0
 
     private val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
@@ -55,136 +57,112 @@ class GrpcServerUserVertexTest: GrpcServerTestHelper(), IVertexTests {
                 // Create a client channel and register for automatic graceful shutdown.
                 grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build())
         )
-        this.userId = this.createDefaultUser(date)!!
-        this.createDefaultAccessGroup(Date())
+        this.id = this.createDefaultGroup(date)!!
 
     }
 
     @Test
     override fun addVertex() {
-        val properties: List<Property> = listOf(
-                Property("code", "2"),
-                Property("name", "User Test 2"),
-                Property("observation", "User Test 2 Observation"))
-        val vertex = VertexData("user", properties)
+        val properties:List<Property> = listOf(Property("code", "2"),
+                Property("name", "RH"),
+                Property("observation", "This is a RH Group"))
+        val vertex = VertexData("group", properties)
         val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, vertex)
         val response = stub!!.addVertex(
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        assertEquals("user", response.data.label)
-        val propertiesMap = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
-        assertEquals("User Test 2", propertiesMap["name"])
-        assertEquals("2", propertiesMap["code"])
-        assertNotNull(format.parse(propertiesMap["creationDate"]))
-        assertEquals("User Test 2 Observation", propertiesMap["observation"])
-        assertTrue(propertiesMap["enable"]!!.toBoolean())
-    }
-
-    @Test
-    override fun getVertexByCode() {
-        val vertex = VertexByCode("user", "1")
-        val converter = Converter.create().
-                toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
-        val response = stub!!.getVertexByCode(
-                AccessControlServer.GetVertexByCodeRequest.newBuilder(converter).build()
-        )
-        assertEquals("success", response.status)
-        assertEquals("", response.message)
-        this.assertAgentVertexGrpcResponse("user", userId, "1", "UserTest", date, "This is UserTest", true, response)
+        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
+        Assert.assertEquals("RH", responseConverter["name"])
+        Assert.assertEquals("2", responseConverter["code"])
+        Assert.assertEquals("This is a RH Group", responseConverter["observation"])
+        assertNotNull(format.parse(responseConverter["creationDate"]))
+        Assert.assertEquals(true, responseConverter["enable"]!!.toBoolean())
+        this.assertAgentMapper("group", "2", "RH", format.parse(responseConverter["creationDate"]), "This is a RH Group", true, responseConverter["id"])
     }
 
     @Test
     override fun getVertexById() {
         val response = stub!!.getVertexById(
-                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(userId).build()
+                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(id).build()
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAgentVertexGrpcResponse("user", userId, "1", "UserTest", date, "This is UserTest", true, response)
+        this.assertAgentVertexGrpcResponse("group", id, "1", "Marketing", date, "This is a Marketing Group", true, response)
     }
 
     @Test
-    fun getVertexByIdThatNotExist() {
-       val response = stub!!.getVertexById(
-                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(1).build()
-        )
-        assertEquals("error", response.status)
-        assertEquals("@GVIE-001 Vertex not found", response.message)
-        Assert.assertFalse(response.hasData())
-    }
-
-    @Test
-    fun getVertexByCodeThatNotExist() {
-        val vertex = VertexByCode("user", "2")
+    override fun getVertexByCode() {
+        val vertex = VertexByCode("group", "1")
         val converter = Converter.create().
                 toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
         val response = stub!!.getVertexByCode(
                 AccessControlServer.GetVertexByCodeRequest.newBuilder(converter).build()
         )
-        assertEquals("error", response.status)
-        assertEquals("@GVCE-001 Vertex not found", response.message)
-        Assert.assertFalse(response.hasData())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertAgentVertexGrpcResponse("group", id, "1", "Marketing", date, "This is a Marketing Group", true, response)
     }
 
     @Test
     override fun createVertexWithExtraProperty() {
-        val properties: List<Property> = listOf(
-                Property("code", "2"),
-                Property("name", "User Test 2"),
-                Property("description", "User Test 2 Description"))
-        val vertex = VertexData("user", properties)
+        val properties:List<Property> = listOf(Property("code", "2"),
+                Property("name", "New Group"),
+                Property("description", "This is a description"),
+                Property("observation", "This is a observation"))
+        val vertex = VertexData("group", properties)
         val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, vertex)
         val response = stub!!.addVertex(
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        val propertiesMap = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
-        assertEquals("User Test 2", propertiesMap["name"])
-        assertEquals("2", propertiesMap["code"])
-        assertNotNull(format.parse(propertiesMap["creationDate"]))
-        assertTrue(propertiesMap["enable"]!!.toBoolean())
-        this.assertAgentMapper("user", "2", "User Test 2", format.parse(propertiesMap["creationDate"]), "", true, propertiesMap["id"])
+        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
+        Assert.assertEquals("New Group", responseConverter["name"])
+        Assert.assertEquals("2", responseConverter["code"])
+        Assert.assertEquals("This is a observation", responseConverter["observation"])
+        assertNotNull(format.parse(responseConverter["creationDate"]))
+        Assert.assertEquals(true, responseConverter["enable"]!!.toBoolean())
+        this.assertAgentMapper("group", "2", "New Group", format.parse(responseConverter["creationDate"]), "This is a observation", true, responseConverter["id"])
     }
 
     @Test
     override fun cantCreateVertexThatExist() {
         val properties: List<Property> = listOf(Property("code", "1"), Property("name", "Test"))
-        val vertex = VertexData("user", properties)
+        val vertex = VertexData("group", properties)
         val converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, vertex)
         val response = stub!!.addVertex(
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@UCVE-002 Adding this property for key [code] and value [1] violates a uniqueness constraint [vByUserCode]", response.message)
+        Assert.assertEquals("@GCVE-002 Adding this property for key [code] and value [1] violates a uniqueness constraint [vByGroupCode]", response.message)
         Assert.assertFalse(response.hasData())
-        this.assertAgentMapper("user", "1", "UserTest", date, "This is UserTest", true)
+        this.assertAgentMapper("group", "1", "Marketing", date, "This is a Marketing Group", true)
     }
 
     @Test
     override fun cantCreateVertexWithRequiredPropertyEmpty() {
         val code: List<Property> = listOf(Property("code", "2"))
-        val user = VertexData("user", code)
-        var converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user)
-        val response = stub!!.addVertex(
+        val group = VertexData("group", code)
+        var converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, group)
+        var response = stub!!.addVertex(
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@UCVE-001 Empty User properties", response.message)
+        Assert.assertEquals("@GCVE-001 Empty Group properties", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("user").has("code", "2").hasNext())
+        Assert.assertFalse(g.V().hasLabel("group").has("code", "2").hasNext())
         val name: List<Property> = listOf(Property("name", "test"))
-        val user1 = VertexData("user", name)
-        converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, user1)
-        val response1 = stub!!.addVertex(
+        val group1 = VertexData("group", name)
+        converter = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, group1)
+        response = stub!!.addVertex(
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
-        Assert.assertEquals("error", response1.status)
-        Assert.assertEquals("@UCVE-001 Empty User properties", response1.message)
-        Assert.assertFalse(response1.hasData())
-        Assert.assertFalse(g.V().hasLabel("user").has("name", "test").hasNext())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@GCVE-001 Empty Group properties", response.message)
+        Assert.assertFalse(response.hasData())
+        Assert.assertFalse(g.V().hasLabel("group").has("code", "2").hasNext())
     }
 }

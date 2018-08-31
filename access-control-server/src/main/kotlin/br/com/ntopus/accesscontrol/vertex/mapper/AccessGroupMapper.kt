@@ -3,7 +3,7 @@ package br.com.ntopus.accesscontrol.vertex.mapper
 import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-import br.com.ntopus.accesscontrol.model.vertex.validator.AccessGroupValidator
+import br.com.ntopus.accesscontrol.vertex.validator.AccessGroupValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.AccessGroup
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
@@ -52,7 +52,7 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 //                )
 //        return edgeForTarget.createEdge(vSource, vTarget, target, this.accessGroup.code)
 //    }
-//
+
 //    override fun updateProperty(properties: List<Property>): JSONResponse {
 //        val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.code)
 //                ?: return FAILResponse(data = "AGUPE-001 Impossible find Access Group with code ${this.accessGroup.code}")
@@ -82,17 +82,17 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 //        )
 //        return SUCCESSResponse(data = response)
 //    }
-//
-//    override fun delete(): JSONResponse {
-//        val user = AccessGroupValidator().hasVertex(this.accessGroup.code)
-//                ?: return FAILResponse(data = "@AGDE-001 Impossible find Access Group with code ${this.accessGroup.code}")
-//        try {
-//            user.property(PropertyLabel.ENABLE.label, false)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@AGDE-002 ${e.message.toString()}")
-//        }
-//        return SUCCESSResponse(data = null)
-//    }
+
+    override fun delete(): AccessControlServer.VertexResponse {
+        val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@AGDE-001 Impossible find Access Group with code ${this.accessGroup.code}")
+        try {
+            accessGroup.property(PropertyLabel.ENABLE.label, false)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse( "@AGDE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse()
+    }
 }

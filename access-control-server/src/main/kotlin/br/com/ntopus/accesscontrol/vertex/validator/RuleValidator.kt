@@ -1,4 +1,4 @@
-package br.com.ntopus.accesscontrol.model.vertex.validator
+package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
@@ -11,16 +11,6 @@ class RuleValidator: DefaultValidator() {
         val g = graph.traversal()
         return g.V().hasLabel(VertexLabel.RULE.label).has(PropertyLabel.CODE.label, code)
                 .has(property.name, property.value).next() != null
-    }
-
-    override fun hasVertex(code: String): Vertex? {
-        val g = graph.traversal()
-        return try {
-            g.V().hasLabel(VertexLabel.RULE.label).has(PropertyLabel.CODE.label, code).next()
-        }
-        catch (e: Exception) {
-            null
-        }
     }
 
     override fun canUpdateVertexProperty(properties: List<Property>): Boolean {

@@ -11,7 +11,10 @@ object ProtoVertexResponse: IProtoResponse{
                 .setMessage(error).setStatus(StatusResponse.ERROR.label).build()
     }
 
-    override fun createSuccessResponse(data: VertexData): AccessControlServer.VertexResponse {
+    override fun createSuccessResponse(data: VertexData?): AccessControlServer.VertexResponse {
+        if (data == null) {
+            return AccessControlServer.VertexResponse.newBuilder().setStatus(StatusResponse.SUCCESS.label).build()
+        }
         val vertex = Converter.create().toProtobuf(AccessControlServer.Vertex::class.java, data)
         return AccessControlServer.VertexResponse.newBuilder()
                 .setData(vertex).setStatus(StatusResponse.SUCCESS.label).build()

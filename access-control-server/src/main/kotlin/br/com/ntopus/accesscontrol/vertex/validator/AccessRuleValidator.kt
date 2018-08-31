@@ -36,15 +36,6 @@ class AccessRuleValidator: DefaultValidator() {
         }
     }
 
-    override fun hasVertex(code: String): Vertex? {
-        return try {
-            val g = graph.traversal()
-            g.V().hasLabel(VertexLabel.ACCESS_RULE.label).has(PropertyLabel.CODE.label, code).next()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     override fun isCorrectVertexTarget(target: VertexInfo): Boolean {
         return when(target.label) {
             VertexLabel.ACCESS_GROUP.label -> target.label == VertexLabel.ACCESS_GROUP.label

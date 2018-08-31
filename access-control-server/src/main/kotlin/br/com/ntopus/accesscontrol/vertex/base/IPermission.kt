@@ -12,10 +12,11 @@ abstract class IPermission(properties: Map<String, String>): IDefaultCommon(prop
     override fun mapperToVertexData(label: String): VertexData {
         var list: List<Property> = listOf()
         list+= Property(PropertyLabel.ID.label, this.id.toString())
+        list+= Property(PropertyLabel.NAME.label, this.name)
         list+= Property(PropertyLabel.CODE.label, this.code)
         list+= Property(PropertyLabel.CREATION_DATE.label, this.formatDate())
         if (!this.description.isEmpty()) {
-            list+= Property(PropertyLabel.OBSERVATION.label, this.description)
+            list+= Property(PropertyLabel.DESCRIPTION.label, this.description)
         }
         list+= Property(PropertyLabel.ENABLE.label, this.enable.toString())
         return VertexData(label, list)

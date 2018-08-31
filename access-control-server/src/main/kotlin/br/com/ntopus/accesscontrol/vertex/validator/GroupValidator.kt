@@ -1,4 +1,4 @@
-package br.com.ntopus.accesscontrol.model.vertex.validator
+package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
@@ -10,14 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex
 class GroupValidator : DefaultValidator() {
     override fun isCorrectVertexTarget(target: VertexInfo): Boolean {
         return target.label == VertexLabel.GROUP.label
-    }
-
-    override fun hasVertex(code: String): Vertex? {
-        return try {
-            graph.traversal().V().hasLabel(VertexLabel.GROUP.label).has(PropertyLabel.CODE.label, code).next()
-        } catch (e: Exception) {
-            null
-        }
     }
 
     override fun hasVertexTarget(target: VertexInfo): Vertex? {

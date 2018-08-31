@@ -1,4 +1,4 @@
-package br.com.ntopus.accesscontrol.model.vertex.validator
+package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
@@ -21,15 +21,6 @@ class AccessGroupValidator: DefaultValidator() {
             }
         } catch (e: Exception) {
             return null
-        }
-    }
-
-    override fun hasVertex(code: String): Vertex? {
-        return try {
-            val g = graph.traversal()
-            g.V().hasLabel(VertexLabel.ACCESS_GROUP.label).has(PropertyLabel.CODE.label, code).next()
-        } catch (e: Exception) {
-            null
         }
     }
 

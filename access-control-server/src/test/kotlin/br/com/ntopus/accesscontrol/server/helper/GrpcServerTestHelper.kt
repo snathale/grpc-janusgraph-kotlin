@@ -11,8 +11,6 @@ import org.junit.Assert
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 abstract class GrpcServerTestHelper {
 
@@ -184,69 +182,34 @@ abstract class GrpcServerTestHelper {
 //        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
 //    }
 
-    fun assertUserVertexGrpcResponse(id: Long, code: String, name: String, creationDate: Date, observation: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
-        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data)
-        assertEquals("user", responseConverter.label)
-        assertEquals("id", responseConverter.properties[0].name)
-        assertEquals(id.toString(), responseConverter.properties[0].value)
-        assertEquals("name", responseConverter.properties[1].name)
-        assertEquals(name, responseConverter.properties[1].value)
-        assertEquals("code", responseConverter.properties[2].name)
-        assertEquals(code, responseConverter.properties[2].value)
-        assertEquals("observation", responseConverter.properties[3].name)
-        assertEquals(observation, responseConverter.properties[3].value)
-        assertEquals("creationDate", responseConverter.properties[4].name)
+    fun assertAccessRuleVertexGrpcResponse(code: String, enable: Boolean, expirationDate: Date, response: AccessControlServer.VertexResponse, id: Long? = null) {
+        val properties= Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-        assertEquals(format.format(creationDate), (responseConverter.properties[4].value))
-        assertEquals("enable", responseConverter.properties[5].name)
-        assertEquals(enable, responseConverter.properties[5].value.toBoolean())
+        val objExpirationDate = format.parse(properties["expirationDate"])
+        Assert.assertEquals("success", response.status)
+        Assert.assertEquals(format.format(expirationDate), format.format(objExpirationDate))
+        Assert.assertEquals(code, properties["code"])
+        Assert.assertEquals(enable, properties["enable"]!!.toBoolean())
+        if (id != null) {
+            Assert.assertEquals(id.toString(), properties["id"])
+        }
     }
 
-    fun assertUnitOrganizationVertexGrpcResponse(id: Long, code: String, name: String, creationDate: Date, observation: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
-        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data)
-        val properties = responseConverter.properties.map { it.name to it.value }.toMap()
-        assertEquals("unitOrganization", responseConverter.label)
-        assertEquals(id.toString(), properties["id"])
-        assertEquals(name, properties["name"])
-        assertEquals(code, properties["code"])
-        assertEquals(observation, properties["observation"])
-        assertEquals(enable, properties["enable"]!!.toBoolean())
+    fun assertAccessRuleMapper(code: String, enable: Boolean, expirationDate: Date? = null, id: Long? = null) {
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-        assertEquals(format.format(creationDate), (properties["creationDate"]))
+        val g = GraphFactory.open().traversal()
+        val vertex = g.V().hasLabel("accessRule").has("code", code).next()
+        val values = AbstractMapper.parseMapVertex(vertex)
+        if (expirationDate!=null){
+            Assert.assertEquals(format.format(expirationDate), AbstractMapper.parseMapValueDate(values["expirationDate"].toString()))
+        }
+        if (id!=null) {
+            Assert.assertEquals(id.toString(), AbstractMapper.parseMapValue(values["id"].toString()))
+        }
+        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
+        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
     }
 //
-//    fun assertAccessRuleApiResponseSuccess(code: String, enable: Boolean, expirationDate: Date, response: CreateAssociationSuccess) {
-//        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//        val objExpirationDate = format.parse(response.data.expirationDate)
-//        Assert.assertEquals("SUCCESS", response.status)
-//        Assert.assertEquals(format.format(expirationDate), format.format(objExpirationDate))
-//        Assert.assertEquals(code, response.data.code)
-//        Assert.assertEquals(enable, response.data.enable)
-//    }
-//
-//    fun assertAccessRuleMapper(code: String, enable: Boolean, expirationDate: Date? = null) {
-//        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//        val g = GraphFactory.open().traversal()
-//        val vertex = g.V().hasLabel("accessRule").has("code", code).next()
-//        val values = AbstractMapper.parseMapVertex(vertex)
-//        if (expirationDate!=null){
-//            Assert.assertEquals(format.format(expirationDate), AbstractMapper.parseMapValueDate(values["expirationDate"].toString()))
-//        }
-//        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
-//        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
-//    }
-//
-//    fun assertAccessGroupMapper(code: String, name: String, description: String, creationDate: Date, enable: Boolean) {
-//        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//        val g = GraphFactory.open().traversal()
-//        val vertex = g.V().hasLabel("accessGroup").has("code", code).next()
-//        val values = AbstractMapper.parseMapVertex(vertex)
-//        Assert.assertEquals(format.format(creationDate), AbstractMapper.parseMapValueDate(values["creationDate"].toString()))
-//        Assert.assertEquals(name, AbstractMapper.parseMapValue(values["name"].toString()))
-//        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
-//        Assert.assertEquals(description, AbstractMapper.parseMapValue(values["description"].toString()))
-//        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
-//    }
 //
 //    fun assertAccessGroupResponseSuccess(code: String, name: String, enable: Boolean, creationDate: Date, description: String, response: CreatePermissionSuccess) {
 //        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -270,16 +233,59 @@ abstract class GrpcServerTestHelper {
 //        Assert.assertEquals(description, AbstractMapper.parseMapValue(values["description"].toString()))
 //        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
 //    }
-//
-//
-//    fun assertRuleApiResponseSuccess(code: String, name: String, description: String, enable: Boolean, creationDate: Date, response: CreatePermissionSuccess) {
-//        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//        val objExpirationDate = format.parse(response.data.creationDate)
-//        Assert.assertEquals("SUCCESS", response.status)
-//        Assert.assertEquals(format.format(creationDate), format.format(objExpirationDate))
-//        Assert.assertEquals(code, response.data.code)
-//        Assert.assertEquals(name, response.data.name)
-//        Assert.assertEquals(description, response.data.description)
-//        Assert.assertEquals(enable, response.data.enable)
-//    }
+
+    fun assertAgentMapper(label: String,  code: String, name: String, creationDate: Date, observation: String, enable: Boolean, id:String? = null) {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+        val g = GraphFactory.open().traversal()
+        val vertex = g.V().hasLabel(label).has("code", code).next()
+        val values = AbstractMapper.parseMapVertex(vertex)
+        Assert.assertEquals(format.format(creationDate), AbstractMapper.parseMapValueDate(values["creationDate"].toString()))
+        Assert.assertEquals(name, AbstractMapper.parseMapValue(values["name"].toString()))
+        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
+        Assert.assertEquals(observation, AbstractMapper.parseMapValue(values["observation"].toString()))
+        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
+        if (id != null) {
+            Assert.assertEquals(id, AbstractMapper.parseMapValue(values["id"].toString()))
+        }
+    }
+
+    fun assertPermissionMapper(label: String, code: String, name: String, creationDate: Date, description: String, enable: Boolean, id:String? = null) {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+        val g = GraphFactory.open().traversal()
+        val vertex = g.V().hasLabel(label).has("code", code).next()
+        val values = AbstractMapper.parseMapVertex(vertex)
+        Assert.assertEquals(format.format(creationDate), AbstractMapper.parseMapValueDate(values["creationDate"].toString()))
+        Assert.assertEquals(name, AbstractMapper.parseMapValue(values["name"].toString()))
+        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
+        Assert.assertEquals(description, AbstractMapper.parseMapValue(values["description"].toString()))
+        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
+        if (id != null) {
+            Assert.assertEquals(id, AbstractMapper.parseMapValue(values["id"].toString()))
+        }
+    }
+
+    fun assertPermissionVertexGrpcResponse(label: String, id: Long, code: String, name: String, creationDate: Date, description: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
+        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data)
+        val properties = responseConverter.properties.map { it.name to it.value }.toMap()
+        assertEquals(label, responseConverter.label)
+        assertEquals(id.toString(), properties["id"])
+        assertEquals(name, properties["name"])
+        assertEquals(code, properties["code"])
+        assertEquals(description, properties["description"])
+        assertEquals(enable, properties["enable"]!!.toBoolean())
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+        assertEquals(format.format(creationDate), (properties["creationDate"]))
+    }
+
+    fun assertAgentVertexGrpcResponse(label: String, id: Long, code: String, name: String, creationDate: Date, observation: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
+        val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
+        assertEquals(label, response.data.label)
+        assertEquals(id.toString(), responseConverter["id"])
+        assertEquals(name, responseConverter["name"])
+        assertEquals(code, responseConverter["code"])
+        assertEquals(observation, responseConverter["observation"])
+        assertEquals(enable, responseConverter["enable"]!!.toBoolean())
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+        assertEquals(format.format(creationDate), (responseConverter["creationDate"]))
+    }
 }

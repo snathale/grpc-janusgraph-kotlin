@@ -63,20 +63,20 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
 //        )
 //        return SUCCESSResponse(data = response)
 //    }
-//
-//    override fun delete(): JSONResponse {
-//        val accessRule = AccessRuleValidator().hasVertex(this.accessRule.code)
-//                ?: return FAILResponse(data = "@ARDE-001 Impossible find Access Rule with code ${this.accessRule.code}")
-//        try {
-//            accessRule.property(PropertyLabel.ENABLE.label, false)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@ARDE-002 ${e.message.toString()}")
-//        }
-//        return SUCCESSResponse(data = null)
-//    }
-//
+
+    override fun delete(): AccessControlServer.VertexResponse {
+        val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@ARDE-001 Impossible find Access Rule with code ${this.accessRule.code}")
+        try {
+            accessRule.property(PropertyLabel.ENABLE.label, false)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@ARDE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse()
+    }
+
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
 //        if (!AccessRuleValidator().isCorrectVertexTarget(target)) {
 //            return FAILResponse(data = "@ARCEE-001 Impossible create this edge with target code ${target.code}")

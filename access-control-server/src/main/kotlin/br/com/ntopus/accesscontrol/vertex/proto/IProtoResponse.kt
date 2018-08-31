@@ -6,5 +6,5 @@ import br.com.ntopus.accesscontrol.vertex.data.VertexData
 
 interface IProtoResponse {
     fun createErrorResponse(error: String): AccessControlServer.VertexResponse
-    fun createSuccessResponse(data: VertexData): AccessControlServer.VertexResponse
+    fun createSuccessResponse(data: VertexData? = null): AccessControlServer.VertexResponse
 }

@@ -16,9 +16,9 @@ class UserValidator : DefaultValidator() {
         }
     }
 
-    override fun hasVertex(code: String): Vertex? {
+    override fun hasVertex(id: Long): Vertex? {
         return try {
-            graph.traversal().V().hasLabel(VertexLabel.USER.label).has(PropertyLabel.CODE.label, code).next()
+            graph.traversal().V(id).next()
         }
         catch (e: Exception) {
             null

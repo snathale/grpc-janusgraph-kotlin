@@ -4,8 +4,9 @@ import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.UnitOrganization
-import br.com.ntopus.accesscontrol.model.vertex.validator.UnitOrganizationValidator
+import br.com.ntopus.accesscontrol.vertex.validator.UnitOrganizationValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
 class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
@@ -59,50 +60,38 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
 //        )
 //        return SUCCESSResponse(data = response)
 //    }
-//
-//    override fun updateProperty(properties: List<Property>): JSONResponse {
-//        val unitOrganization = UnitOrganizationValidator()
-//                .hasVertex(this.unitOrganization.code)
-//                ?: return FAILResponse(
-//                        data = "@UOCEE-001 Impossible find Unit Organization with code ${this.unitOrganization.code}"
-//                )
-//        if (!UnitOrganizationValidator().canUpdateVertexProperty(properties)) {
-//            return FAILResponse(data = "@UOUPE-002 Unit Organization property can be updated")
-//        }
-//        try {
-//            for (property in properties) {
-//                unitOrganization.property(property.name, property.value)
-//            }
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@UOUPE-003 ${e.message.toString()}")
-//        }
-//        val traversal = graph.traversal().V().hasLabel(VertexLabel.UNIT_ORGANIZATION.label)
-//                .has(PropertyLabel.CODE.label, this.unitOrganization.code).next()
-//        val values = AbstractMapper.parseMapVertex(traversal)
-//        val response = AgentResponse(
-//                unitOrganization.id() as Long,
-//                this.unitOrganization.code,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.NAME.label].toString()),
-//                AbstractMapper.parseMapValueDate(values[PropertyLabel.CREATION_DATE.label].toString())!!,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.ENABLE.label].toString()).toBoolean(),
-//                AbstractMapper.parseMapValue((values[PropertyLabel.OBSERVATION.label].toString()))
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
-//
-//    override fun delete(): JSONResponse {
-//        val unitOrganization = UnitOrganizationValidator()
-//                .hasVertex(this.unitOrganization.code)
-//                ?: return FAILResponse(data = "@UODE-001 Impossible find Unit Organization with code ${this.unitOrganization.code}")
-//        try {
-//            unitOrganization.property(PropertyLabel.ENABLE.label, false)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@UODE-002 ${e.message.toString()}")
-//        }
-//        return SUCCESSResponse(data = null)
-//    }
+
+    override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
+        val unitOrganization = UnitOrganizationValidator()
+                .hasVertex(this.unitOrganization.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@UOCEE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}"
+                )
+        if (!UnitOrganizationValidator().canUpdateVertexProperty(properties)) {
+            return ProtoVertexResponse.createErrorResponse("@UOUPE-002 Unit Organization property can be updated")
+        }
+        try {
+            for (property in properties) {
+                unitOrganization.property(property.name, property.value)
+            }
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse( "@UOUPE-003 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(unitOrganization))
+    }
+
+    override fun delete(): AccessControlServer.VertexResponse {
+        val unitOrganization = UnitOrganizationValidator()
+                .hasVertex(this.unitOrganization.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@UODE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}")
+        try {
+            unitOrganization.property(PropertyLabel.ENABLE.label, false)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@UODE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse()
+    }
 }

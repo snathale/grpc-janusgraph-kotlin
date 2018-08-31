@@ -5,6 +5,7 @@ import br.com.ntopus.accesscontrol.factory.MapperFactory
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
@@ -20,9 +21,8 @@ data class VertexByCode(@ProtoField var label: String = "", @ProtoField var code
 class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBase() {
 
     override fun addVertex(request: AccessControlServer.AddVertexRequest?, responseObserver: StreamObserver<AccessControlServer.VertexResponse>?) {
-        val converter = Converter.create()
         try {
-            val vertex = converter.toDomain(VertexData::class.java, request!!.vertex)
+            val vertex = Converter.create().toDomain(VertexData::class.java, request!!.vertex)
             responseObserver?.onNext(MapperFactory.createFactory(vertex).insert())
 
         } catch (e: Exception) {
@@ -58,6 +58,32 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
         } catch (e: Exception) {
             val response =  ProtoVertexResponse
                     .createErrorResponse("@GVCE-001 Vertex not found")
+            responseObserver?.onNext(response)
+        }
+        responseObserver?.onCompleted()
+    }
+
+    override fun deleteVertex(request: AccessControlServer.DeleteVertexRequest?, responseObserver: StreamObserver<AccessControlServer.VertexResponse>?) {
+        try {
+            val vertexData = VertexData(request!!.label, listOf(Property(PropertyLabel.ID.label, request.id.toString())))
+            val response = MapperFactory.createFactory(vertexData).delete()
+            responseObserver?.onNext(response)
+        } catch (e: Exception) {
+            val response =  ProtoVertexResponse
+                    .createErrorResponse("@ACDV-001 Impossible delete Vertex ${e.message}")
+            responseObserver?.onNext(response)
+        }
+        responseObserver?.onCompleted()
+    }
+
+    override fun updateVertexProperty(request: AccessControlServer.UpdateVertexPropertyRequest?, responseObserver: StreamObserver<AccessControlServer.VertexResponse>?) {
+        val vertex = VertexData(request!!.label, listOf(Property(PropertyLabel.ID.label, request.id.toString())))
+        try {
+            val properties = Converter.create().toDomain(Property::class.java, request.propertyList)
+            val response = MapperFactory.createFactory(vertex).updateProperty(properties)
+            responseObserver?.onNext(response)
+        } catch (e: Exception) {
+            val response = ProtoVertexResponse.createErrorResponse("@ACUPV-001 Impossible update Vertex Property ${e.message}")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()

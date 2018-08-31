@@ -1,6 +1,7 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
+import br.com.ntopus.accesscontrol.vertex.data.Property
 
 data class EdgeCreated(
         val source: VertexInfo,
@@ -19,7 +20,7 @@ interface VertexResponse {
 }
 interface IMapper {
     fun insert(): AccessControlServer.VertexResponse
-//    fun updateProperty(properties: List<Property>): JSONResponse
+    fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse
 //    fun createEdge(target: VertexInfo, edgeTarget: String = ""): JSONResponse
-//    fun delete(): JSONResponse
+    fun delete(): AccessControlServer.VertexResponse
 }

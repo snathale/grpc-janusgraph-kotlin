@@ -1,12 +1,12 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
-import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-import br.com.ntopus.accesscontrol.model.vertex.validator.RuleValidator
+import br.com.ntopus.accesscontrol.vertex.validator.RuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.Rule
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
 class RuleMapper (val properties: Map<String, String>): IMapper {
@@ -35,51 +35,37 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
         return ProtoVertexResponse.createSuccessResponse(this.rule.mapperToVertexData(VertexLabel.RULE.label))
     }
 
-//    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
-//        return FAILResponse(data = "@RCEE-001 Impossible create a edge with target code ${target.code}")
-//    }
-//
-//    override fun updateProperty(properties: List<Property>): JSONResponse {
-//        val rule = RuleValidator().hasVertex(this.rule.code)
-//                ?: return FAILResponse(data = "RUPE-001 Impossible find Rule with code ${this.rule.code}")
-//
-//        if (!RuleValidator().canUpdateVertexProperty(properties)) {
-//            return FAILResponse(data = "@RUPE-002 Rule property can be updated")
-//        }
-//        try {
-//            for (property in properties) {
-//                rule.property(property.name, property.value)
-//            }
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@RUPE-003 ${e.message.toString()}")
-//        }
-//        val traversal = graph.traversal().V().hasLabel(VertexLabel.RULE.label)
-//                .has(PropertyLabel.CODE.label, this.rule.code).next()
-//        val values = AbstractMapper.parseMapVertex(traversal)
-//        val response = PermissionResponse(
-//                rule.id() as Long,
-//                this.rule.code,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.NAME.label].toString()),
-//                AbstractMapper.parseMapValueDate(values[PropertyLabel.CREATION_DATE.label].toString())!!,
-//                AbstractMapper.parseMapValue((values[PropertyLabel.DESCRIPTION.label].toString())),
-//                AbstractMapper.parseMapValue(values[PropertyLabel.ENABLE.label].toString()).toBoolean()
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
-//
-//    override fun delete(): JSONResponse {
-//        val rule = RuleValidator().hasVertex(this.rule.code)
-//                ?: return FAILResponse(data = "@RDE-001 Impossible find Rule with code ${this.rule.code}")
-//        try {
-//            rule.property(PropertyLabel.ENABLE.label, false)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@RDE-002 ${e.message.toString()}")
-//        }
-//        return SUCCESSResponse(data = null)
-//    }
+
+    override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
+        val rule = RuleValidator().hasVertex(this.rule.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("RUPE-001 Impossible find Rule with id ${this.rule.id}")
+
+        if (!RuleValidator().canUpdateVertexProperty(properties)) {
+            return ProtoVertexResponse.createErrorResponse("@RUPE-002 Rule property can be updated")
+        }
+        try {
+            for (property in properties) {
+                rule.property(property.name, property.value)
+            }
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@RUPE-003 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(rule))
+    }
+
+    override fun delete(): AccessControlServer.VertexResponse {
+        val rule = RuleValidator().hasVertex(this.rule.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@RDE-001 Impossible find Rule with code ${this.rule.code}")
+        try {
+            rule.property(PropertyLabel.ENABLE.label, false)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse("@RDE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse()
+    }
 
 }

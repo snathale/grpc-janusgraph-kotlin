@@ -2,9 +2,10 @@ package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.model.vertex.validator.GroupValidator
+import br.com.ntopus.accesscontrol.vertex.validator.GroupValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.Group
+import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
 
@@ -34,48 +35,37 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
         return ProtoVertexResponse.createSuccessResponse(this.group.mapperToVertexData(VertexLabel.GROUP.label))
     }
 
-//    override fun updateProperty(properties: List<Property>): JSONResponse {
-//        val group = GroupValidator().hasVertex(this.group.code)
-//                ?: return FAILResponse(data = "@GUPE-001 Impossible find Group with code ${this.group.code}")
-//
-//        if (!GroupValidator().canUpdateVertexProperty(properties)) {
-//            return FAILResponse(data = "@GUPE-002 Group property can be updated")
-//        }
-//        try {
-//            for (property in properties) {
-//                group.property(property.name, property.value)
-//            }
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@GUPE-003 ${e.message.toString()}")
-//        }
-//        val traversal = graph.traversal().V().hasLabel(VertexLabel.GROUP.label)
-//                .has(PropertyLabel.CODE.label, this.group.code).next()
-//        val values = AbstractMapper.parseMapVertex(traversal)
-//        val response = AgentResponse(
-//                group.id() as Long,
-//                this.group.code,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.NAME.label].toString()),
-//                AbstractMapper.parseMapValueDate(values[PropertyLabel.CREATION_DATE.label].toString())!!,
-//                AbstractMapper.parseMapValue(values[PropertyLabel.ENABLE.label].toString()).toBoolean(),
-//                AbstractMapper.parseMapValue((values[PropertyLabel.OBSERVATION.label].toString()))
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
-//
-//    override fun delete(): JSONResponse {
-//        val group = GroupValidator().hasVertex(this.group.code)
-//                ?: return FAILResponse(data = "@GDE-001 Impossible find Group with code ${this.group.code}")
-//        try {
-//            group.property(PropertyLabel.ENABLE.label, false)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@GDE-002 ${e.message.toString()}")
-//        }
-//        return SUCCESSResponse(data = null)
-//    }
+    override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
+        val group = GroupValidator().hasVertex(this.group.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@GUPE-001 Impossible find Group with id ${this.group.id}")
+
+        if (!GroupValidator().canUpdateVertexProperty(properties)) {
+            return ProtoVertexResponse.createErrorResponse( "@GUPE-002 Group property can be updated")
+        }
+        try {
+            for (property in properties) {
+                group.property(property.name, property.value)
+            }
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoVertexResponse.createErrorResponse( "@GUPE-003 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(group))
+    }
+
+    override fun delete(): AccessControlServer.VertexResponse {
+        val group = GroupValidator().hasVertex(this.group.id!!)
+                ?: return ProtoVertexResponse.createErrorResponse("@GDE-001 Impossible find Group with id ${this.group.code}")
+        try {
+            group.property(PropertyLabel.ENABLE.label, false)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            ProtoVertexResponse.createErrorResponse("@GDE-002 ${e.message.toString()}")
+        }
+        return ProtoVertexResponse.createSuccessResponse()
+    }
 //
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
 //        if (!GroupValidator().isCorrectVertexTarget(target)) {

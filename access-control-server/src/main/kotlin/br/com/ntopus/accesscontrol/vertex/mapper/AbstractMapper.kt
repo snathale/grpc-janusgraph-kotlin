@@ -46,8 +46,7 @@ object AbstractMapper {
             }
             list+= Property(item.key(), toString(item.value()))
         }
-        val response = VertexData(vertex.label(), list)
-        return response
+        return VertexData(vertex.label(), list)
     }
 
     fun toString(value: Any?): String {
