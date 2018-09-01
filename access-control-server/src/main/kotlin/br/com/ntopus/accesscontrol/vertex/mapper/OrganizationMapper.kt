@@ -5,9 +5,12 @@ import br.com.ntopus.accesscontrol.vertex.Organization
 import br.com.ntopus.accesscontrol.vertex.validator.OrganizationValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.*
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class OrganizationMapper (val properties: Map<String, String>): IMapper {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private val organization = Organization(properties)
     private val graph = GraphFactory.open()
@@ -15,7 +18,7 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
     override fun insert(): AccessControlServer.VertexResponse {
         try {
             if (!OrganizationValidator().canInsertVertex(this.organization)) {
-                return ProtoVertexResponse.createErrorResponse("@OCVE-001 Empty Organization properties")
+                return ProtoResponse.createVertexErrorResponse("@OCVE-001 Empty Organization properties")
             }
             val organization = graph.addVertex(VertexLabel.ORGANIZATION.label)
             organization.property(PropertyLabel.NAME.label, this.organization.name)
@@ -29,9 +32,9 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
             this.organization.id = organization.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@OCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@OCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.organization.mapperToVertexData(VertexLabel.ORGANIZATION.label))
+        return ProtoResponse.createVertexSuccessResponse(this.organization.mapperToVertexData(VertexLabel.ORGANIZATION.label))
     }
 
 
@@ -60,10 +63,10 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val organization = OrganizationValidator()
                 .hasVertex(this.organization.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@OUPE-001 Impossible find Organization with id ${this.organization.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@OUPE-001 Impossible find Organization with id ${this.organization.id}")
 
         if (!OrganizationValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse("@OUPE-002 Organization property can be updated")
+            return ProtoResponse.createVertexErrorResponse("@OUPE-002 Organization property can be updated")
         }
         try {
             for (property in properties) {
@@ -72,23 +75,23 @@ class OrganizationMapper (val properties: Map<String, String>): IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@OUPE-003 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@OUPE-003 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(organization))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(organization))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val organization = OrganizationValidator()
                 .hasVertex(this.organization.id)
-                ?: return ProtoVertexResponse.createErrorResponse(
+                ?: return ProtoResponse.createVertexErrorResponse(
                         "@ODE-001 Impossible find Organization with id ${this.organization.id}")
         try {
             organization.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@UDE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@UDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 }

@@ -7,16 +7,20 @@ import br.com.ntopus.accesscontrol.vertex.AccessRule
 import br.com.ntopus.accesscontrol.vertex.validator.AccessRuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 import java.text.SimpleDateFormat
 
 class AccessRuleMapper (val properties: Map<String, String>): IMapper {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val accessRule = AccessRule(properties)
     private val graph = GraphFactory.open()
 
     override fun insert(): AccessControlServer.VertexResponse {
         if (!AccessRuleValidator().canInsertVertex(this.accessRule)) {
-            return ProtoVertexResponse.createErrorResponse("@ARCVE-001 Empty Access Rule properties")
+            return ProtoResponse.createVertexErrorResponse("@ARCVE-001 Empty Access Rule properties")
         }
         try {
             val accessRule = graph.addVertex(VertexLabel.ACCESS_RULE.label)
@@ -29,16 +33,16 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
             this.accessRule.id = accessRule.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@ARCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@ARCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.accessRule.mapperToVertexData())
+        return ProtoResponse.createVertexSuccessResponse(this.accessRule.mapperToVertexData())
     }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@ARUPE-001 Impossible find Access Rule with id ${this.accessRule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@ARUPE-001 Impossible find Access Rule with id ${this.accessRule.id}")
         if (!AccessRuleValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse("@ARUPE-002 Access Rule property can be updated")
+            return ProtoResponse.createVertexErrorResponse("@ARUPE-002 Access Rule property can be updated")
         }
         try {
             for (property in properties) {
@@ -52,22 +56,22 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@ARUPE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@ARUPE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(accessRule))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(accessRule))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@ARDE-001 Impossible find Access Rule with id ${this.accessRule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@ARDE-001 Impossible find Access Rule with id ${this.accessRule.id}")
         try {
             accessRule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@ARDE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@ARDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {

@@ -7,15 +7,19 @@ import br.com.ntopus.accesscontrol.vertex.validator.RuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.Rule
 import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class RuleMapper (val properties: Map<String, String>): IMapper {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val rule = Rule(properties)
     private val graph = GraphFactory.open()
 
     override fun insert(): AccessControlServer.VertexResponse {
         if (!RuleValidator().canInsertVertex(this.rule)) {
-            return ProtoVertexResponse.createErrorResponse("@RCVE-001 Empty Rule properties")
+            return ProtoResponse.createVertexErrorResponse("@RCVE-001 Empty Rule properties")
         }
         try {
             val rule = graph.addVertex(VertexLabel.RULE.label)
@@ -30,18 +34,18 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
             this.rule.id = rule.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@RCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@RCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.rule.mapperToVertexData(VertexLabel.RULE.label))
+        return ProtoResponse.createVertexSuccessResponse(this.rule.mapperToVertexData(VertexLabel.RULE.label))
     }
 
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val rule = RuleValidator().hasVertex(this.rule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("RUPE-001 Impossible find Rule with id ${this.rule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("RUPE-001 Impossible find Rule with id ${this.rule.id}")
 
         if (!RuleValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse("@RUPE-002 Rule property can be updated")
+            return ProtoResponse.createVertexErrorResponse("@RUPE-002 Rule property can be updated")
         }
         try {
             for (property in properties) {
@@ -50,22 +54,22 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@RUPE-003 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@RUPE-003 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(rule))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(rule))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val rule = RuleValidator().hasVertex(this.rule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@RDE-001 Impossible find Rule with id ${this.rule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@RDE-001 Impossible find Rule with id ${this.rule.id}")
         try {
             rule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@RDE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@RDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 
 }

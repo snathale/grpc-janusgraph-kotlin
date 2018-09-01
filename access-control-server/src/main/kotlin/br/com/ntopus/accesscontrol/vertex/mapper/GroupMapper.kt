@@ -7,15 +7,19 @@ import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.Group
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class GroupMapper (val properties: Map<String, String>): IMapper {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val group = Group(properties)
     private val graph = GraphFactory.open()
 
     override fun insert(): AccessControlServer.VertexResponse {
         if (!GroupValidator().canInsertVertex(this.group)) {
-            return ProtoVertexResponse.createErrorResponse("@GCVE-001 Empty Group properties")
+            return ProtoResponse.createVertexErrorResponse("@GCVE-001 Empty Group properties")
         }
         try {
             val group = graph.addVertex(VertexLabel.GROUP.label)
@@ -30,17 +34,17 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
             this.group.id = group.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@GCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@GCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.group.mapperToVertexData(VertexLabel.GROUP.label))
+        return ProtoResponse.createVertexSuccessResponse(this.group.mapperToVertexData(VertexLabel.GROUP.label))
     }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val group = GroupValidator().hasVertex(this.group.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@GUPE-001 Impossible find Group with id ${this.group.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@GUPE-001 Impossible find Group with id ${this.group.id}")
 
         if (!GroupValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse( "@GUPE-002 Group property can be updated")
+            return ProtoResponse.createVertexErrorResponse( "@GUPE-002 Group property can be updated")
         }
         try {
             for (property in properties) {
@@ -49,22 +53,22 @@ class GroupMapper (val properties: Map<String, String>): IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse( "@GUPE-003 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse( "@GUPE-003 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(group))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(group))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val group = GroupValidator().hasVertex(this.group.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@GDE-001 Impossible find Group with id ${this.group.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@GDE-001 Impossible find Group with id ${this.group.id}")
         try {
             group.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            ProtoVertexResponse.createErrorResponse("@GDE-002 ${e.message.toString()}")
+            ProtoResponse.createVertexErrorResponse("@GDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 //
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {

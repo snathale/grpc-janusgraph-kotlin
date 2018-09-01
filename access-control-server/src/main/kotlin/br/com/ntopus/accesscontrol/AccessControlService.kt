@@ -5,10 +5,11 @@ import br.com.ntopus.accesscontrol.factory.MapperFactory
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
+import br.com.ntopus.accesscontrol.vertex.data.EdgeData
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 import io.grpc.stub.StreamObserver
 import net.badata.protobuf.converter.Converter
 import net.badata.protobuf.converter.annotation.ProtoClass
@@ -26,8 +27,8 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             responseObserver?.onNext(MapperFactory.createFactory(vertex).insert())
 
         } catch (e: Exception) {
-            responseObserver?.onNext(ProtoVertexResponse
-                    .createErrorResponse("@AVE-001 Impossible create a Vertex ${e.message}"))
+            responseObserver?.onNext(ProtoResponse
+                    .createVertexErrorResponse("@AVE-001 Impossible create a Vertex ${e.message}"))
         }
         responseObserver?.onCompleted()
     }
@@ -36,12 +37,12 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
         try {
             val g = GraphFactory.open().traversal()
             val vertex = g.V(request!!.id).next()
-            val response = ProtoVertexResponse
-                    .createSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
+            val response = ProtoResponse
+                    .createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoVertexResponse
-                    .createErrorResponse("@GVIE-001 Vertex not found")
+            val response =  ProtoResponse
+                    .createVertexErrorResponse("@GVIE-001 Vertex not found")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()
@@ -52,12 +53,12 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             val vertexByCode = Converter.create().toDomain(VertexByCode::class.java, request)
             val g = GraphFactory.open().traversal()
             val vertex = g.V().hasLabel(vertexByCode.label).has(PropertyLabel.CODE.label, vertexByCode.code).next()
-            val response = ProtoVertexResponse
-                    .createSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
+            val response = ProtoResponse
+                    .createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoVertexResponse
-                    .createErrorResponse("@GVCE-001 Vertex not found")
+            val response =  ProtoResponse
+                    .createVertexErrorResponse("@GVCE-001 Vertex not found")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()
@@ -69,8 +70,8 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             val response = MapperFactory.createFactory(vertexData).delete()
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoVertexResponse
-                    .createErrorResponse("@ACDV-001 Impossible delete Vertex ${e.message}")
+            val response =  ProtoResponse
+                    .createVertexErrorResponse("@ACDV-001 Impossible delete Vertex ${e.message}")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()
@@ -83,10 +84,20 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             val response = MapperFactory.createFactory(vertex).updateProperty(properties)
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response = ProtoVertexResponse.createErrorResponse("@UPVE-001 Impossible update Vertex Property ${e.message}")
+            val response = ProtoResponse.createVertexErrorResponse("@UPVE-001 Impossible update Vertex Property ${e.message}")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()
     }
 
+    override fun addEdge(request: AccessControlServer.AddEdgeRequest?, responseObserver: StreamObserver<AccessControlServer.EdgeResponse>?) {
+        try {
+            val edge = Converter.create().toDomain(EdgeData::class.java, request!!.edge)
+            val vertex = VertexData(edge.source!!.label, listOf(Property(PropertyLabel.ID.label, edge.source!!.id.toString())))
+            responseObserver?.onNext(MapperFactory.createFactory(vertex).createEdge(edge.target!!, request.edgeLabel))
+        } catch (e: Exception) {
+            responseObserver?.onNext(ProtoResponse
+                    .createEdgeErrorResponse("@AEE-001 Impossible create a Edge ${e.message}"))
+        }
+    }
 }

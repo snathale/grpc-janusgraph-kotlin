@@ -7,15 +7,19 @@ import br.com.ntopus.accesscontrol.vertex.validator.AccessGroupValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.AccessGroup
 import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val graph = GraphFactory.open()
     private val accessGroup = AccessGroup(properties)
 
     override fun insert(): AccessControlServer.VertexResponse {
         if (!AccessGroupValidator().canInsertVertex(this.accessGroup)) {
-            return ProtoVertexResponse.createErrorResponse("@AGCVE-001 Empty Access Group properties")
+            return ProtoResponse.createVertexErrorResponse("@AGCVE-001 Empty Access Group properties")
         }
         try {
             val accessGroup = graph.addVertex(VertexLabel.ACCESS_GROUP.label)
@@ -30,9 +34,9 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
             this.accessGroup.id = accessGroup.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@AGCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@AGCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.accessGroup.mapperToVertexData(VertexLabel.ACCESS_GROUP.label))
+        return ProtoResponse.createVertexSuccessResponse(this.accessGroup.mapperToVertexData(VertexLabel.ACCESS_GROUP.label))
     }
 
 //    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
@@ -56,9 +60,9 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@AGUPE-001 Impossible find Access Group with id ${this.accessGroup.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@AGUPE-001 Impossible find Access Group with id ${this.accessGroup.id}")
         if (!AccessGroupValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse("@AGUPE-002 Access Group property can be updated")
+            return ProtoResponse.createVertexErrorResponse("@AGUPE-002 Access Group property can be updated")
         }
 
         try {
@@ -68,21 +72,21 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@AGUPE-003 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@AGUPE-003 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(accessGroup))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(accessGroup))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@AGDE-001 Impossible find Access Group with id ${this.accessGroup.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@AGDE-001 Impossible find Access Group with id ${this.accessGroup.id}")
         try {
             accessGroup.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse( "@AGDE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse( "@AGDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 }

@@ -7,7 +7,7 @@ import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.User
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.validator.UserValidator
-import br.com.ntopus.accesscontrol.vertex.proto.ProtoVertexResponse
+import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class UserMapper(val properties: Map<String, String>) : IMapper {
     private val user = User(properties)
@@ -17,7 +17,7 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
     override fun insert(): AccessControlServer.VertexResponse {
         try {
             if (!UserValidator().canInsertVertex(this.user)) {
-                return ProtoVertexResponse.createErrorResponse("@UCVE-001 Empty User properties")
+                return ProtoResponse.createVertexErrorResponse("@UCVE-001 Empty User properties")
             }
             val user = graph.addVertex(VertexLabel.USER.label)
             user.property(PropertyLabel.NAME.label, this.user.name)
@@ -31,14 +31,13 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
             this.user.id = user.longId()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@UCVE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@UCVE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(this.user.mapperToVertexData(VertexLabel.USER.label))
+        return ProtoResponse.createVertexSuccessResponse(this.user.mapperToVertexData(VertexLabel.USER.label))
     }
 
 
-    //
-//    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
 //        if (!UserValidator().isCorrectVertexTarget(target)) {
 //            return FAILResponse(data = "@UCEE-001 Impossible create edge with target code ${target.code}")
 //        }
@@ -56,14 +55,15 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
 //        }
 //        val response = EdgeCreated(VertexInfo(VertexLabel.USER.label, this.user.code), target, EdgeLabel.ASSOCIATED.label)
 //        return SUCCESSResponse(data = response)
-//    }
+        return ProtoResponse.createVertexSuccessResponse()
+    }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val user = UserValidator().hasVertex(this.user.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@UUPE-001 Impossible find User with id ${this.user.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@UUPE-001 Impossible find User with id ${this.user.id}")
 
         if (!UserValidator().canUpdateVertexProperty(properties)) {
-            return ProtoVertexResponse.createErrorResponse("@UUPE-002 User property can be updated")
+            return ProtoResponse.createVertexErrorResponse("@UUPE-002 User property can be updated")
         }
 
         try {
@@ -73,21 +73,21 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@UUPE-004 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@UUPE-004 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse(AbstractMapper.parseVertexToVertexData(user))
+        return ProtoResponse.createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(user))
     }
 
     override fun delete(): AccessControlServer.VertexResponse {
         val user = UserValidator().hasVertex(this.user.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@UDE-001 Impossible find User with id ${this.user.id}")
+                ?: return ProtoResponse.createVertexErrorResponse("@UDE-001 Impossible find User with id ${this.user.id}")
         try {
             user.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
         } catch (e: Exception) {
             graph.tx().rollback()
-            return ProtoVertexResponse.createErrorResponse("@UDE-002 ${e.message.toString()}")
+            return ProtoResponse.createVertexErrorResponse("@UDE-002 ${e.message.toString()}")
         }
-        return ProtoVertexResponse.createSuccessResponse()
+        return ProtoResponse.createVertexSuccessResponse()
     }
 }
