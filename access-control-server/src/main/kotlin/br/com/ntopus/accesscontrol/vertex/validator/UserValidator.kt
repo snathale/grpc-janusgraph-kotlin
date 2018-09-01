@@ -8,19 +8,18 @@ import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class UserValidator : DefaultValidator() {
 
-    override fun hasVertexTarget(target: VertexInfo): Vertex? {
+    override fun hasVertex(id: Long): Vertex? {
         return try {
-            graph.traversal().V().hasLabel(VertexLabel.ACCESS_RULE.label).has(PropertyLabel.CODE.label, target.code).next()
+            graph.traversal().V(id).hasLabel(VertexLabel.USER.label).next()
         } catch (e: Exception) {
             null
         }
     }
 
-    override fun hasVertex(id: Long): Vertex? {
+    override fun hasVertexTarget(target: VertexInfo): Vertex? {
         return try {
-            graph.traversal().V(id).next()
-        }
-        catch (e: Exception) {
+            graph.traversal().V().hasLabel(VertexLabel.ACCESS_RULE.label).has(PropertyLabel.CODE.label, target.code).next()
+        } catch (e: Exception) {
             null
         }
     }

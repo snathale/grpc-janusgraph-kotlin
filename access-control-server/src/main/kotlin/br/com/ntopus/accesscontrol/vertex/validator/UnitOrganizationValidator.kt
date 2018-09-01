@@ -8,6 +8,14 @@ import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class UnitOrganizationValidator : DefaultValidator() {
 
+    override fun hasVertex(id: Long): Vertex? {
+        return try {
+            graph.traversal().V(id).hasLabel(VertexLabel.UNIT_ORGANIZATION.label).next()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override fun hasVertexTarget(target: VertexInfo): Vertex? {
         return try {
             graph.traversal().V().hasLabel(VertexLabel.GROUP.label).has(PropertyLabel.CODE.label, target.code).next()

@@ -56,7 +56,7 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id)
-                ?: return ProtoVertexResponse.createErrorResponse("AGUPE-001 Impossible find Access Group with id ${this.accessGroup.id}")
+                ?: return ProtoVertexResponse.createErrorResponse("@AGUPE-001 Impossible find Access Group with id ${this.accessGroup.id}")
         if (!AccessGroupValidator().canUpdateVertexProperty(properties)) {
             return ProtoVertexResponse.createErrorResponse("@AGUPE-002 Access Group property can be updated")
         }
@@ -75,7 +75,7 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@AGDE-001 Impossible find Access Group with code ${this.accessGroup.code}")
+                ?: return ProtoVertexResponse.createErrorResponse("@AGDE-001 Impossible find Access Group with id ${this.accessGroup.id}")
         try {
             accessGroup.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

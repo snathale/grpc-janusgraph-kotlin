@@ -16,7 +16,7 @@ abstract class MapperFactory {
                 VertexLabel.RULE.label -> RuleMapper(vertex.properties.associateBy({ it.name }, { it.value }))
                 VertexLabel.ACCESS_GROUP.label -> AccessGroupMapper(vertex.properties.associateBy({ it.name }, { it.value }))
                 VertexLabel.ACCESS_RULE.label -> AccessRuleMapper(vertex.properties.associateBy({ it.name }, { it.value }))
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("@MFE-001 Vertex label not found")
             }
 
         }

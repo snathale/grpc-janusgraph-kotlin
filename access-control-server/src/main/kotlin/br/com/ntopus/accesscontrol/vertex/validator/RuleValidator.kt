@@ -7,6 +7,15 @@ import br.com.ntopus.accesscontrol.vertex.validator.DefaultValidator
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class RuleValidator: DefaultValidator() {
+
+    override fun hasVertex(id: Long): Vertex? {
+        return try {
+            graph.traversal().V(id).hasLabel(VertexLabel.RULE.label).next()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override fun hasProperty(code: String, property: Property): Boolean {
         val g = graph.traversal()
         return g.V().hasLabel(VertexLabel.RULE.label).has(PropertyLabel.CODE.label, code)

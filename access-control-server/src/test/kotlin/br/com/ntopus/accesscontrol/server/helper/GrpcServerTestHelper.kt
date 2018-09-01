@@ -14,16 +14,6 @@ import kotlin.test.assertEquals
 
 abstract class GrpcServerTestHelper {
 
-    private val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-
-    fun createVertexBaseUrl(port: Int): String {
-        return "http://localhost:$port/api/v1/vertex"
-    }
-
-    fun createEdgeBaseUrl(port: Int): String {
-        return "http://localhost:$port/api/v1/edge"
-    }
-
     fun createDefaultOrganization(date: Date): Long? {
         val graph = GraphFactory.open()
         return try {

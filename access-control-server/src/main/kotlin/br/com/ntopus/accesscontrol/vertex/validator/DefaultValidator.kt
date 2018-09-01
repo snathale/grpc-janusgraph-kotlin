@@ -16,7 +16,6 @@ abstract class DefaultValidator: IValidator {
         } catch (e: Exception) {
             null
         }
-
     }
 
     override fun canInsertVertex(vertex: ICommon): Boolean {
@@ -35,6 +34,10 @@ abstract class DefaultValidator: IValidator {
     }
 
     override fun canUpdateVertexProperty(properties: List<Property>): Boolean {
+        return false
+    }
+
+    override fun hasProperty(code: String, property: Property): Boolean {
         return false
     }
 }

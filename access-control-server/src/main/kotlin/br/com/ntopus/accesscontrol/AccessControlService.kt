@@ -83,7 +83,7 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             val response = MapperFactory.createFactory(vertex).updateProperty(properties)
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response = ProtoVertexResponse.createErrorResponse("@ACUPV-001 Impossible update Vertex Property ${e.message}")
+            val response = ProtoVertexResponse.createErrorResponse("@UPVE-001 Impossible update Vertex Property ${e.message}")
             responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()

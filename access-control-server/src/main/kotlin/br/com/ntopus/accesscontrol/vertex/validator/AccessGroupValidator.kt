@@ -9,6 +9,14 @@ import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class AccessGroupValidator: DefaultValidator() {
 
+    override fun hasVertex(id: Long): Vertex? {
+        return try {
+            graph.traversal().V(id).hasLabel(VertexLabel.ACCESS_GROUP.label).next()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override fun hasVertexTarget(target: VertexInfo): Vertex? {
         return try {
             val g = graph.traversal()

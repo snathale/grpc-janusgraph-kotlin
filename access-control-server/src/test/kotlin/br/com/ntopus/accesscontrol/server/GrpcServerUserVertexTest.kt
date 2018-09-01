@@ -215,9 +215,9 @@ class GrpcServerUserVertexTest : GrpcServerTestHelper(), IVertexTests {
         val properties : List<Property> = listOf(Property("name", "Test"), Property("code", "2"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(1).setLabel("user").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(userId+1).setLabel("user").addAllProperty(converter).build())
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@UUPE-001 Impossible find User with id 1", response.message)
+        Assert.assertEquals("@UUPE-001 Impossible find User with id ${userId+1}", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
         Assert.assertFalse(g.V().hasLabel("user").has("name", "Test").has("code", "2").hasNext())
@@ -236,12 +236,12 @@ class GrpcServerUserVertexTest : GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun cantDeleteVertexThatNotExist() {
         val response = stub!!.deleteVertex(
-                AccessControlServer.DeleteVertexRequest.newBuilder().setId(1).setLabel("user").build()
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(userId+1).setLabel("user").build()
         )
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@UDE-001 Impossible find User with id 1", response.message)
+        Assert.assertEquals("@UDE-001 Impossible find User with id ${userId+1}", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("user").hasId(1).hasNext())
+        Assert.assertFalse(g.V().hasLabel("user").hasId(userId+1).hasNext())
     }
 }

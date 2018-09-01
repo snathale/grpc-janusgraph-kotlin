@@ -9,6 +9,14 @@ import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class AccessRuleValidator: DefaultValidator() {
 
+    override fun hasVertex(id: Long): Vertex? {
+        return try {
+            graph.traversal().V(id).hasLabel(VertexLabel.ACCESS_RULE.label).next()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override fun canInsertVertex(vertex: ICommon): Boolean {
         if (vertex.code.isEmpty()) {
             return false
@@ -55,7 +63,9 @@ class AccessRuleValidator: DefaultValidator() {
         for (value in properties) {
             if (value.name != PropertyLabel.NAME.label
                     && value.name != PropertyLabel.EXPIRATION_DATE.label
-                    && value.name != PropertyLabel.ENABLE.label) return false
+                    && value.name != PropertyLabel.ENABLE.label) {
+                return false
+            }
         }
         return true
     }

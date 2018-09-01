@@ -36,7 +36,7 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@ARUPE-001 Impossible find Access Rule with code ${this.accessRule.code}")
+                ?: return ProtoVertexResponse.createErrorResponse("@ARUPE-001 Impossible find Access Rule with id ${this.accessRule.id}")
         if (!AccessRuleValidator().canUpdateVertexProperty(properties)) {
             return ProtoVertexResponse.createErrorResponse("@ARUPE-002 Access Rule property can be updated")
         }
@@ -59,7 +59,7 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id)
-                ?: return ProtoVertexResponse.createErrorResponse("@ARDE-001 Impossible find Access Rule with code ${this.accessRule.code}")
+                ?: return ProtoVertexResponse.createErrorResponse("@ARDE-001 Impossible find Access Rule with id ${this.accessRule.id}")
         try {
             accessRule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

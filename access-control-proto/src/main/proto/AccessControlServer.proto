@@ -45,12 +45,12 @@ message Failure {
 }
 
 message DeleteVertexRequest {
-    string label = 1;
-    int64 id = 2;
+    int64 id = 1;
+    string label = 2;
 }
 
 message UpdateVertexPropertyRequest {
-    string label = 1;
-    int64 id = 2;
+    int64 id = 1;
+    string label = 2;
     repeated Property property = 3;
 }

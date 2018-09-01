@@ -189,23 +189,63 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(g.V().hasLabel("accessGroup").has("name", "test").hasNext())
     }
 
+    @Test
     override fun updateProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessGroup").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertPermissionVertexGrpcResponse("accessGroup", id,"1", "Operator Updated",date, "Property updated", true, response)
+        this.assertPermissionMapper("accessGroup","1", "Operator Updated",date, "Property updated", true, id.toString())
     }
 
+    @Test
     override fun cantUpdateDefaultProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessGroup").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@AGUPE-002 Access Group property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertPermissionMapper("accessGroup", "1", "Operator", date, "This is a Operator Access Group", true, id.toString())
     }
 
+    @Test
     override fun cantUpdatePropertyFromVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id+1).setLabel("accessGroup").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@AGUPE-001 Impossible find Access Group with id ${id+1}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("accessGroup").has("name", "Operator Updated").has("description", "Property updated").hasNext())
     }
 
+    @Test
     override fun deleteVertex() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("accessGroup").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertPermissionMapper("accessGroup", "1", "Operator", date, "This is a Operator Access Group", false, id.toString())
     }
 
+    @Test
     override fun cantDeleteVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id+1).setLabel("accessGroup").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@AGDE-001 Impossible find Access Group with id ${id+1}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("accessGroup").hasId(id+1).hasNext())
     }
 }

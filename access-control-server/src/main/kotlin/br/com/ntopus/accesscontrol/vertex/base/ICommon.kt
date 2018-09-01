@@ -8,7 +8,7 @@ abstract class ICommon(properties: Map<String, String>) {
 
     var enable: Boolean = if (!this.toString(properties["enable"]).isEmpty()) properties["enable"]!!.toBoolean() else true
 
-    var id: Long = properties["id"]!!.toLong()
+    var id: Long = if (!this.toString(properties["id"]).isEmpty()) properties["id"]!!.toLong() else 0
 
     fun toString(value: Any?): String {
         if (value.toString() == "null") {

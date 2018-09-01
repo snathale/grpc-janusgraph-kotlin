@@ -167,23 +167,63 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(g.V().hasLabel("accessRule").has("expirationDate", expirationDate).hasNext())
     }
 
+    @Test
     override fun updateProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val expirationDate = this.addMinutes(date, 5)
+        val properties : List<Property> = listOf(Property("expirationDate", format.format(expirationDate)), Property("name", "Group Test"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessRule").addAllProperty(converter).build())
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertAccessRuleVertexGrpcResponse("1", true, expirationDate, response)
+        this.assertAccessRuleMapper("1", true, expirationDate, id)
     }
 
+    @Test
     override fun cantUpdateDefaultProperty() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val properties : List<Property> = listOf(Property("name", "Group Test"), Property("code", "2"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessRule").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARUPE-002 Access Rule property can be updated", response.message)
+        Assert.assertFalse(response.hasData())
+        this.assertAccessRuleMapper("1", true, date, id)
     }
 
+    @Test
     override fun cantUpdatePropertyFromVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val g = GraphFactory.open().traversal()
+        val properties : List<Property> = listOf(Property("enable", "false"))
+        val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
+        val response = stub!!.updateVertexProperty(
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id+1).setLabel("accessRule").addAllProperty(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARUPE-001 Impossible find Access Rule with id ${id+1}", response.message)
+        Assert.assertFalse(response.hasData())
+        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(id+1).has("enable", "false").hasNext())
     }
 
+    @Test
     override fun deleteVertex() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("accessRule").build()
+        )
+        Assert.assertEquals("success", response.status)
+        Assert.assertFalse(response.hasData())
+        this.assertAccessRuleMapper("1", false, date, id)
     }
 
+    @Test
     override fun cantDeleteVertexThatNotExist() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val response = stub!!.deleteVertex(
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id+1).setLabel("accessRule").build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARDE-001 Impossible find Access Rule with id ${id+1}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(id+1).hasNext())
     }
 }
