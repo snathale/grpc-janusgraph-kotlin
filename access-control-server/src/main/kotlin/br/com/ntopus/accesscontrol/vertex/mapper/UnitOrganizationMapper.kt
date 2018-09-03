@@ -1,18 +1,14 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.UnitOrganization
 import br.com.ntopus.accesscontrol.vertex.validator.UnitOrganizationValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
-import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.*
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
+import org.apache.tinkerpop.gremlin.structure.Edge
 
 class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
-    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     private val unitOrganization = UnitOrganization(properties)
     private val graph = GraphFactory.open()
@@ -36,39 +32,49 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
             graph.tx().rollback()
             return ProtoResponse.createVertexErrorResponse("@UOCVE-002 ${e.message.toString()}")
         }
-        return ProtoResponse.createVertexSuccessResponse(this.unitOrganization.mapperToVertexData(VertexLabel.UNIT_ORGANIZATION.label))
+        return ProtoResponse.createVertexSuccessResponse(
+                this.unitOrganization.mapperToVertexData(VertexLabel.UNIT_ORGANIZATION.label)
+        )
     }
 
-//    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
-//        if (!UnitOrganizationValidator().isCorrectVertexTarget(target)) {
-//            return FAILResponse(data = "@UOCEE-001 Impossible create edge with target code ${target.code}")
-//        }
-//        val unitOrganization = UnitOrganizationValidator()
-//                .hasVertex(this.unitOrganization.code)
-//                ?: return FAILResponse(
-//                        data = "@UOCEE-002 Impossible find Unit Organization with code ${this.unitOrganization.code}"
-//                )
-//
-//        val group = UnitOrganizationValidator().hasVertexTarget(target)
-//                ?: return FAILResponse(data = "@UOCEE-003 Impossible find Group with code ${target.code}")
-//        try {
-//            unitOrganization.addEdge(EdgeLabel.HAS.label, group)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@UOCEE-004 ${e.message.toString()}")
-//        }
-//        val response = EdgeCreated(
-//                VertexInfo(VertexLabel.UNIT_ORGANIZATION.label, this.unitOrganization.code),
-//                target, EdgeLabel.HAS.label
-//        )
-//        return SUCCESSResponse(data = response)
-//    }
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.EdgeResponse {
+        if (!UnitOrganizationValidator().isCorrectVertexTarget(target)) {
+            return ProtoResponse.createEdgeErrorResponse(
+                    "@UOCEE-001 Impossible create edge with target id ${target.id}"
+            )
+        }
+        val unitOrganization = UnitOrganizationValidator()
+                .hasVertex(this.unitOrganization.id)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@UOCEE-002 Impossible find Unit Organization with id ${this.unitOrganization.id}"
+                )
+
+        val group = UnitOrganizationValidator().hasVertexTarget(target)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@UOCEE-003 Impossible find Group with id ${target.id}"
+                )
+        val edge: Edge
+        try {
+            edge = unitOrganization.addEdge(EdgeLabel.HAS.label, group)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoResponse.createEdgeErrorResponse("@UOCEE-004 ${e.message.toString()}")
+        }
+        val response = EdgeData(
+                VertexInfo(this.unitOrganization.id, VertexLabel.UNIT_ORGANIZATION.label),
+                target,
+                EdgeLabel.HAS.label,
+                listOf(Property(PropertyLabel.ID.label, edge.id().toString()))
+        )
+        return ProtoResponse.createEdgeSuccessResponse(response)
+    }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val unitOrganization = UnitOrganizationValidator()
                 .hasVertex(this.unitOrganization.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@UOCEE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}"
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@UOCEE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}"
                 )
         if (!UnitOrganizationValidator().canUpdateVertexProperty(properties)) {
             return ProtoResponse.createVertexErrorResponse("@UOUPE-002 Unit Organization property can be updated")
@@ -88,7 +94,9 @@ class UnitOrganizationMapper (val properties: Map<String, String>): IMapper {
     override fun delete(): AccessControlServer.VertexResponse {
         val unitOrganization = UnitOrganizationValidator()
                 .hasVertex(this.unitOrganization.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@UODE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@UODE-001 Impossible find Unit Organization with id ${this.unitOrganization.id}"
+                )
         try {
             unitOrganization.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

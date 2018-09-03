@@ -12,8 +12,8 @@ interface IVertexTests {
     fun cantUpdatePropertyFromVertexThatNotExist()
     fun deleteVertex()
     fun cantDeleteVertexThatNotExist()
-//    fun cantCreateEdgeWithSourceThatNotExist()
-//    fun cantCreateEdgeWithTargetThatNotExist()
-//    fun cantCreateEdgeWithIncorrectTarget()
-//    fun createEdge()
+    fun cantCreateEdgeWithSourceThatNotExist()
+    fun cantCreateEdgeWithTargetThatNotExist()
+    fun cantCreateEdgeWithIncorrectTarget()
+    fun createEdge()
 }

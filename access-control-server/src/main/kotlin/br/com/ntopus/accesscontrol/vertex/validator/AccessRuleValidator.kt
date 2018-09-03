@@ -4,7 +4,7 @@ import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.base.ICommon
-import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class AccessRuleValidator: DefaultValidator() {
@@ -29,14 +29,10 @@ class AccessRuleValidator: DefaultValidator() {
         val g = graph.traversal()
         return try {
             when(target.label) {
-                VertexLabel.ACCESS_GROUP.label -> g.V().hasLabel(VertexLabel.ACCESS_GROUP.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
-                VertexLabel.GROUP.label -> g.V().hasLabel(VertexLabel.GROUP.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
-                VertexLabel.UNIT_ORGANIZATION.label -> g.V().hasLabel(VertexLabel.UNIT_ORGANIZATION.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
-                VertexLabel.ORGANIZATION.label -> g.V().hasLabel(VertexLabel.ORGANIZATION.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
+                VertexLabel.ACCESS_GROUP.label -> g.V(target.id).hasLabel(VertexLabel.ACCESS_GROUP.label).next()
+                VertexLabel.GROUP.label -> g.V(target.id).hasLabel(VertexLabel.GROUP.label).next()
+                VertexLabel.UNIT_ORGANIZATION.label -> g.V(target.id).hasLabel(VertexLabel.UNIT_ORGANIZATION.label).next()
+                VertexLabel.ORGANIZATION.label -> g.V().hasLabel(VertexLabel.ORGANIZATION.label).next()
                 else -> null
             }
         } catch (e: Exception) {

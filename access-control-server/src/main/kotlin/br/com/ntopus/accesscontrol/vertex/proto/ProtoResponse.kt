@@ -4,7 +4,9 @@ import br.com.ntopus.accesscontrol.StatusResponse
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.EdgeData
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
 
 object ProtoResponse: IProtoResponse{
 

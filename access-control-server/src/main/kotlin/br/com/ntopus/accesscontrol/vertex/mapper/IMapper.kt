@@ -2,11 +2,8 @@ package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 
-data class VertexInfo(
-        val id: Long,
-        val label: String
-)
 
 interface IMapper {
     fun insert(): AccessControlServer.VertexResponse

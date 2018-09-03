@@ -1,19 +1,16 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.AccessRule
 import br.com.ntopus.accesscontrol.vertex.validator.AccessRuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
-import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.*
+import br.com.ntopus.accesscontrol.vertex.mapper.factory.accessRule.AccessRuleEdgeFactory
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
+import org.apache.tinkerpop.gremlin.structure.Vertex
 import java.text.SimpleDateFormat
 
 class AccessRuleMapper (val properties: Map<String, String>): IMapper {
-    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     private val accessRule = AccessRule(properties)
     private val graph = GraphFactory.open()
@@ -63,7 +60,9 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val accessRule = AccessRuleValidator().hasVertex(this.accessRule.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@ARDE-001 Impossible find Access Rule with id ${this.accessRule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@ARDE-001 Impossible find Access Rule with id ${this.accessRule.id}"
+                )
         try {
             accessRule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()
@@ -74,44 +73,24 @@ class AccessRuleMapper (val properties: Map<String, String>): IMapper {
         return ProtoResponse.createVertexSuccessResponse()
     }
 
-//    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
-//        if (!AccessRuleValidator().isCorrectVertexTarget(target)) {
-//            return FAILResponse(data = "@ARCEE-001 Impossible create this edge with target code ${target.code}")
-//        }
-//        val vAccessGroup = AccessRuleValidator().hasVertex(this.accessRule.code)
-//                ?: return FAILResponse(data = "@ARCEE-002 Impossible find Access Rule with code ${this.accessRule.code}")
-//        val vTarget = AccessRuleValidator().hasVertexTarget(target)
-//                ?: return FAILResponse(data = "@ARCEE-003 Impossible find ${target.label.capitalize()} with code ${target.code}")
-//        return when(target.label) {
-//            VertexLabel.ORGANIZATION.label,
-//            VertexLabel.UNIT_ORGANIZATION.label,
-//            VertexLabel.GROUP.label-> this.createProvideEdge(vAccessGroup, vTarget, target)
-//            VertexLabel.ACCESS_GROUP.label -> this.createOwnEdge(vAccessGroup, vTarget, target)
-//            else -> FAILResponse(data = "@ARCEE-006 Impossible create a edge from Access Rule with code ${this.accessRule.code}")
-//        }
-//    }
-//
-//    private fun createProvideEdge(vSource: Vertex, vTarget: Vertex, target: VertexInfo): JSONResponse {
-//        try {
-//            vSource.addEdge(EdgeLabel.PROVIDE.label, vTarget)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@ARCEE-004 ${e.message.toString()}")
-//        }
-//        val source = VertexInfo(VertexLabel.ACCESS_RULE.label, this.accessRule.code)
-//        return SUCCESSResponse(data = EdgeCreated(source, target, EdgeLabel.PROVIDE.label))
-//    }
-//
-//    private fun createOwnEdge(vSource: Vertex, vTarget: Vertex, target: VertexInfo): JSONResponse {
-//        try {
-//            vSource.addEdge(EdgeLabel.OWN.label,vTarget)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@ARCEE-005 ${e.message.toString()}")
-//        }
-//        val source = VertexInfo(VertexLabel.ACCESS_RULE.label, this.accessRule.code)
-//        return SUCCESSResponse(data = EdgeCreated(source, target, EdgeLabel.OWN.label))
-//    }
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.EdgeResponse {
+        if (!AccessRuleValidator().isCorrectVertexTarget(target)) {
+            return ProtoResponse.createEdgeErrorResponse(
+                    "@ARCEE-001 Impossible create this edge with target id ${target.id}"
+            )
+        }
+        val vSource = AccessRuleValidator().hasVertex(this.accessRule.id)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@ARCEE-002 Impossible find Access Rule with id ${this.accessRule.id}"
+                )
+        val vTarget = AccessRuleValidator().hasVertexTarget(target)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@ARCEE-003 Impossible find ${target.label.capitalize()} with id ${target.id}"
+                )
+        val edgeForTarget = AccessRuleEdgeFactory.edgeForTarget(target)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@ARCEE-006 Impossible create a edge from Access Rule with id ${this.accessRule.id}"
+                )
+        return edgeForTarget.createEdge(vSource, vTarget, target)
+    }
 }

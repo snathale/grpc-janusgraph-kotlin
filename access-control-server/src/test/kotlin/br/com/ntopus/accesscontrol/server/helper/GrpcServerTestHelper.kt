@@ -2,15 +2,13 @@ package br.com.ntopus.accesscontrol.server.helper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
-import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
+import br.com.ntopus.accesscontrol.vertex.data.*
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import net.badata.protobuf.converter.Converter
+import org.apache.tinkerpop.gremlin.structure.Direction
 import org.junit.Assert
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.test.assertEquals
 
 abstract class GrpcServerTestHelper {
 
@@ -151,26 +149,24 @@ abstract class GrpcServerTestHelper {
         return cal.getTime()
     }
 
-//    fun assertEdgeCreatedSuccess(source: VertexInfo, target: VertexInfo, response: CreateEdgeSuccess, edgeLabel: String) {
-//        Assert.assertEquals("SUCCESS", response.status)
-//        Assert.assertEquals(source.label, response.data.source.label)
-//        Assert.assertEquals(source.code, response.data.source.code)
-//        Assert.assertEquals(target.label, response.data.target.label)
-//        Assert.assertEquals(target.code, response.data.target.code)
-//        Assert.assertEquals(edgeLabel, response.data.edgeLabel)
-//    }
-//
-//    fun assertUserMapper(code: String, name: String, creationDate: Date, observation: String, enable: Boolean) {
-//        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-//        val g = GraphFactory.open().traversal()
-//        val userStorage = g.V().hasLabel("user").has("code", code).next()
-//        val values = AbstractMapper.parseMapVertex(userStorage)
-//        Assert.assertEquals(name, AbstractMapper.parseMapValue(values["name"].toString()))
-//        Assert.assertEquals(code, AbstractMapper.parseMapValue(values["code"].toString()))
-//        Assert.assertEquals(observation, AbstractMapper.parseMapValue(values["observation"].toString()))
-//        Assert.assertEquals(format.format(creationDate), AbstractMapper.parseMapValueDate(values["creationDate"].toString()))
-//        Assert.assertEquals(enable, AbstractMapper.parseMapValue(values["enable"].toString()).toBoolean())
-//    }
+    fun assertEdgeCreatedSuccess(source: VertexInfo, target: VertexInfo, edgeLabel: String, response: AccessControlServer.EdgeResponse) {
+        val properties= Converter.create().toDomain(EdgeData::class.java, response.data).properties!!.map { it.name to it.value }.toMap()
+        Assert.assertEquals("success", response.status)
+        Assert.assertEquals(source.label, response.data.source.label)
+        Assert.assertEquals(source.id, response.data.source.id)
+        Assert.assertEquals(target.label, response.data.target.label)
+        Assert.assertEquals(target.id, response.data.target.id)
+        Assert.assertEquals(edgeLabel, response.data.edgeLabel)
+        Assert.assertNotNull(properties["id"])
+    }
+
+    fun assertHasEdge(source: VertexInfo, target: VertexInfo, edgeLabel: String) {
+        val g = GraphFactory.open().traversal()
+        val vSource = g.V(source.id).hasLabel(source.label).next()
+        val vTarget = g.V(target.id).hasLabel(target.label).next()
+        Assert.assertTrue(vSource.edges(Direction.OUT, edgeLabel).hasNext())
+        Assert.assertTrue(vTarget.edges(Direction.IN, edgeLabel).hasNext())
+    }
 
     fun assertAccessRuleVertexGrpcResponse(code: String, enable: Boolean, expirationDate: Date, response: AccessControlServer.VertexResponse, id: Long? = null) {
         val properties= Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
@@ -257,25 +253,25 @@ abstract class GrpcServerTestHelper {
     fun assertPermissionVertexGrpcResponse(label: String, id: Long, code: String, name: String, creationDate: Date, description: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
         val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data)
         val properties = responseConverter.properties.map { it.name to it.value }.toMap()
-        assertEquals(label, responseConverter.label)
-        assertEquals(id.toString(), properties["id"])
-        assertEquals(name, properties["name"])
-        assertEquals(code, properties["code"])
-        assertEquals(description, properties["description"])
-        assertEquals(enable, properties["enable"]!!.toBoolean())
+        Assert.assertEquals(label, responseConverter.label)
+        Assert.assertEquals(id.toString(), properties["id"])
+        Assert.assertEquals(name, properties["name"])
+        Assert.assertEquals(code, properties["code"])
+        Assert.assertEquals(description, properties["description"])
+        Assert.assertEquals(enable, properties["enable"]!!.toBoolean())
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-        assertEquals(format.format(creationDate), (properties["creationDate"]))
+        Assert.assertEquals(format.format(creationDate), (properties["creationDate"]))
     }
 
     fun assertAgentVertexGrpcResponse(label: String, id: Long, code: String, name: String, creationDate: Date, observation: String, enable: Boolean, response: AccessControlServer.VertexResponse) {
         val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data).properties.map { it.name to it.value }.toMap()
-        assertEquals(label, response.data.label)
-        assertEquals(id.toString(), responseConverter["id"])
-        assertEquals(name, responseConverter["name"])
-        assertEquals(code, responseConverter["code"])
-        assertEquals(observation, responseConverter["observation"])
-        assertEquals(enable, responseConverter["enable"]!!.toBoolean())
+        Assert.assertEquals(label, response.data.label)
+        Assert.assertEquals(id.toString(), responseConverter["id"])
+        Assert.assertEquals(name, responseConverter["name"])
+        Assert.assertEquals(code, responseConverter["code"])
+        Assert.assertEquals(observation, responseConverter["observation"])
+        Assert.assertEquals(enable, responseConverter["enable"]!!.toBoolean())
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-        assertEquals(format.format(creationDate), (responseConverter["creationDate"]))
+        Assert.assertEquals(format.format(creationDate), (responseConverter["creationDate"]))
     }
 }

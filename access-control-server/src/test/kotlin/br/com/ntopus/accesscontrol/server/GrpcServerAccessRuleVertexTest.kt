@@ -8,13 +8,18 @@ import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import br.com.ntopus.accesscontrol.server.helper.GrpcServerTestHelper
 import br.com.ntopus.accesscontrol.server.helper.IVertexTests
+import br.com.ntopus.accesscontrol.vertex.data.EdgeData
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
+import org.apache.tinkerpop.gremlin.structure.Direction
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -23,12 +28,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.exp
 import kotlin.test.assertEquals
 
 @RunWith(JUnit4::class)
 class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
-
     @get: Rule
     val grpcCleanup: GrpcCleanupRule = GrpcCleanupRule()
 
@@ -36,9 +39,17 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     private val date: Date = Date()
 
-    private var id: Long = 0
+    private var accessRuleId: Long = 0
 
     private val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+
+    private var groupId: Long = 0
+
+    private var accessGroupId: Long = 0
+
+    private var organizationId: Long = 0
+
+    private var unitOrganizationId: Long = 0
 
     @Before
     fun setUp() {
@@ -58,11 +69,11 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
                 // Create a client channel and register for automatic graceful shutdown.
                 grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build())
         )
-        this.createDefaultOrganization(Date())
-        this.createDefaultUnitOrganization(Date())
-        this.createDefaultGroup(Date())
-        this.createDefaultAccessGroup(Date())
-        this.id = this.createDefaultAccessRule(date)!!
+        this.organizationId = this.createDefaultOrganization(Date())!!
+        this.unitOrganizationId = this.createDefaultUnitOrganization(Date())!!
+        this.groupId = this.createDefaultGroup(Date())!!
+        this.accessGroupId = this.createDefaultAccessGroup(Date())!!
+        this.accessRuleId = this.createDefaultAccessRule(date)!!
     }
 
     @Test
@@ -83,11 +94,11 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun getVertexById() {
         val response = stub!!.getVertexById(
-                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(id).build()
+                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(accessRuleId).build()
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAccessRuleVertexGrpcResponse("1", true, date, response, id)
+        this.assertAccessRuleVertexGrpcResponse("1", true, date, response, accessRuleId)
     }
 
     @Test
@@ -100,7 +111,7 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAccessRuleVertexGrpcResponse("1", true, date, response, id)
+        this.assertAccessRuleVertexGrpcResponse("1", true, date, response, accessRuleId)
     }
 
     @Test
@@ -138,7 +149,7 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertEquals("error", response.status)
         Assert.assertEquals("@ARCVE-002 Adding this property for key [code] and value [1] violates a uniqueness constraint [vByAccessRuleCode]", response.message)
         Assert.assertFalse(response.hasData())
-        this.assertAccessRuleMapper("1", true, date, id)
+        this.assertAccessRuleMapper("1", true, date, accessRuleId)
     }
 
     @Test
@@ -173,11 +184,11 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         val properties : List<Property> = listOf(Property("expirationDate", format.format(expirationDate)), Property("name", "Group Test"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessRule").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessRuleId).setLabel("accessRule").addAllProperty(converter).build())
         assertEquals("success", response.status)
         assertEquals("", response.message)
         this.assertAccessRuleVertexGrpcResponse("1", true, expirationDate, response)
-        this.assertAccessRuleMapper("1", true, expirationDate, id)
+        this.assertAccessRuleMapper("1", true, expirationDate, accessRuleId)
     }
 
     @Test
@@ -185,11 +196,11 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         val properties : List<Property> = listOf(Property("name", "Group Test"), Property("code", "2"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("accessRule").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessRuleId).setLabel("accessRule").addAllProperty(converter).build())
         Assert.assertEquals("error", response.status)
         Assert.assertEquals("@ARUPE-002 Access Rule property can be updated", response.message)
         Assert.assertFalse(response.hasData())
-        this.assertAccessRuleMapper("1", true, date, id)
+        this.assertAccessRuleMapper("1", true, date, accessRuleId)
     }
 
     @Test
@@ -198,32 +209,128 @@ class GrpcServerAccessRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         val properties : List<Property> = listOf(Property("enable", "false"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id+1).setLabel("accessRule").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessRuleId+1).setLabel("accessRule").addAllProperty(converter).build())
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@ARUPE-001 Impossible find Access Rule with id ${id+1}", response.message)
+        Assert.assertEquals("@ARUPE-001 Impossible find Access Rule with id ${accessRuleId+1}", response.message)
         Assert.assertFalse(response.hasData())
-        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(id+1).has("enable", "false").hasNext())
+        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(accessRuleId+1).has("enable", "false").hasNext())
     }
 
     @Test
     override fun deleteVertex() {
         val response = stub!!.deleteVertex(
-                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("accessRule").build()
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(accessRuleId).setLabel("accessRule").build()
         )
         Assert.assertEquals("success", response.status)
         Assert.assertFalse(response.hasData())
-        this.assertAccessRuleMapper("1", false, date, id)
+        this.assertAccessRuleMapper("1", false, date, accessRuleId)
     }
 
     @Test
     override fun cantDeleteVertexThatNotExist() {
         val response = stub!!.deleteVertex(
-                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id+1).setLabel("accessRule").build()
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(accessRuleId+1).setLabel("accessRule").build()
         )
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@ARDE-001 Impossible find Access Rule with id ${id+1}", response.message)
+        Assert.assertEquals("@ARDE-001 Impossible find Access Rule with id ${accessRuleId+1}", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(id+1).hasNext())
+        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(accessRuleId+1).hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithSourceThatNotExist() {
+        val source = VertexInfo(this.accessRuleId+1, "accessRule")
+        val target = VertexInfo(this.groupId, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARCEE-002 Impossible find Access Rule with id ${source.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V().hasLabel("accessRule").hasId(source.id).hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithTargetThatNotExist() {
+        val source = VertexInfo(this.accessRuleId, "accessRule")
+        val target = VertexInfo(this.accessGroupId+1,"accessGroup")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARCEE-003 Impossible find AccessGroup with id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(target.id).hasLabel("accessGroup").hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithIncorrectTarget() {
+        val user = this.createDefaultUser(Date())!!
+        val source = VertexInfo(this.accessRuleId, "accessRule")
+        val target = VertexInfo(user,"user")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@ARCEE-001 Impossible create this edge with target id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(accessRuleId).hasLabel("user").both().hasNext())
+    }
+
+    @Test
+    override fun createEdge() {
+        val source = VertexInfo(this.accessRuleId, "accessRule")
+        val target = VertexInfo(this.accessGroupId, "accessGroup")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertEdgeCreatedSuccess(source, target,"own", response)
+        this.assertHasEdge(source, target, "own")
+    }
+
+    @Test
+    fun createProvideEdge() {
+        val source = VertexInfo(this.accessRuleId,"accessRule")
+        val targets = listOf(
+                VertexInfo(this.organizationId,"organization"),
+                VertexInfo(this.unitOrganizationId,"unitOrganization"),
+                VertexInfo(this.groupId,"group")
+        )
+        for (target in targets) {
+            val edge = EdgeData(source, target)
+            val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+            val config = Configuration.builder().addIgnoredFields(ignore).build()
+            val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+            val response = stub!!.addEdge(
+                    AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+            )
+            assertEquals("success", response.status)
+            assertEquals("", response.message)
+
+            this.assertEdgeCreatedSuccess(source, target,"provide", response)
+            this.assertHasEdge(source, target, "provide")
+        }
     }
 }

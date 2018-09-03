@@ -7,12 +7,11 @@ import br.com.ntopus.accesscontrol.vertex.validator.AccessGroupValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.AccessGroup
 import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
+import br.com.ntopus.accesscontrol.vertex.mapper.factory.accessGroup.AccessGroupEdgeFactory
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
-    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     private val graph = GraphFactory.open()
     private val accessGroup = AccessGroup(properties)
@@ -39,24 +38,24 @@ class AccessGroupMapper(val properties: Map<String, String>) : IMapper {
         return ProtoResponse.createVertexSuccessResponse(this.accessGroup.mapperToVertexData(VertexLabel.ACCESS_GROUP.label))
     }
 
-//    override fun createEdge(target: VertexInfo, edgeTarget: String): JSONResponse {
-//        if (!AccessGroupValidator().isCorrectVertexTarget(target)) {
-//            return FAILResponse(data = "@AGCEE-001 Impossible create this edge with target code ${target.code}")
-//        }
-//        val vSource = AccessGroupValidator().hasVertex(this.accessGroup.code)
-//                ?: return FAILResponse(
-//                        data = "@AGCEE-002 Impossible find Access Group with code ${this.accessGroup.code}"
-//                )
-//        val vTarget = AccessGroupValidator().hasVertexTarget(target)
-//                ?: return FAILResponse(
-//                        data = "@AGCEE-003 Impossible find ${target.label.capitalize()} with code ${target.code}"
-//                )
-//        val edgeForTarget = AccessGroupEdgeFactory().edgeForTarget(target, edgeTarget)
-//                ?: return FAILResponse(
-//                        data = "@AGCEE-004 Impossible create a edge from Access Group with code ${this.accessGroup.code}"
-//                )
-//        return edgeForTarget.createEdge(vSource, vTarget, target, this.accessGroup.code)
-//    }
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.EdgeResponse {
+        if (!AccessGroupValidator().isCorrectVertexTarget(target)) {
+            return ProtoResponse.createEdgeErrorResponse("@AGCEE-001 Impossible create this edge with target id ${target.id}")
+        }
+        val vSource = AccessGroupValidator().hasVertex(this.accessGroup.id)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@AGCEE-002 Impossible find Access Group with id ${this.accessGroup.id}"
+                )
+        val vTarget = AccessGroupValidator().hasVertexTarget(target)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@AGCEE-003 Impossible find ${target.label.capitalize()} with id ${target.id}"
+                )
+        val edgeForTarget = AccessGroupEdgeFactory.edgeForTarget(target, edgeTarget)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@AGCEE-004 Impossible create a edge from Access Group with id ${this.accessGroup.id}"
+                )
+        return edgeForTarget.createEdge(vSource, vTarget, target)
+    }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val accessGroup = AccessGroupValidator().hasVertex(this.accessGroup.id)

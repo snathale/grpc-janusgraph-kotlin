@@ -8,13 +8,17 @@ import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import br.com.ntopus.accesscontrol.server.helper.GrpcServerTestHelper
 import br.com.ntopus.accesscontrol.server.helper.IVertexTests
+import br.com.ntopus.accesscontrol.vertex.data.EdgeData
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -71,11 +75,11 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
                 AccessControlServer.AddVertexRequest.newBuilder().setVertex(converter).build()
         )
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-        assertEquals("success", response.status)
-        assertEquals("", response.message)
+        Assert.assertEquals("success", response.status)
+        Assert.assertEquals("", response.message)
         val responseConverter = Converter.create().toDomain(VertexData::class.java, response.data)
         val propertiesMap = responseConverter.properties.map { it.name to it.value }.toMap()
-        assertNotNull(format.parse(propertiesMap["creationDate"]))
+        Assert.assertNotNull(format.parse(propertiesMap["creationDate"]))
         Assert.assertEquals("REMOVE_USER", propertiesMap["name"])
         Assert.assertEquals("3", propertiesMap["code"])
         Assert.assertEquals("This is a Rule Remove User", propertiesMap["description"])
@@ -88,8 +92,8 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         val response = stub!!.getVertexById(
                 AccessControlServer.GetVertexByIdRequest.newBuilder().setId(id).build()
         )
-        assertEquals("success", response.status)
-        assertEquals("", response.message)
+        Assert.assertEquals("success", response.status)
+        Assert.assertEquals("", response.message)
         this.assertPermissionVertexGrpcResponse("rule", id, "1", "ADD_USER", date, "This is a Rule Add User", true, response)
     }
 
@@ -173,8 +177,8 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
                 AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("rule").addAllProperty(converter).build())
-        assertEquals("success", response.status)
-        assertEquals("", response.message)
+        Assert.assertEquals("success", response.status)
+        Assert.assertEquals("", response.message)
         this.assertPermissionVertexGrpcResponse("rule", id,"1", "Test", date, "Property updated", true, response)
         this.assertPermissionMapper("rule", "1", "Test", date, "Property updated", true,  id.toString())
     }
@@ -224,5 +228,35 @@ class GrpcServerRuleVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
         Assert.assertFalse(g.V().hasLabel("rule").hasId(1).hasNext())
+    }
+
+    override fun cantCreateEdgeWithSourceThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantCreateEdgeWithTargetThatNotExist() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun cantCreateEdgeWithIncorrectTarget() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Test
+    override fun createEdge() {
+        val source = VertexInfo(this.id, "rule")
+        val target = VertexInfo(1,"user")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@RCEE-001 Impossible create a edge with target id ${this.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(this.id).hasLabel("rule").both().hasNext())
     }
 }

@@ -2,12 +2,11 @@ package br.com.ntopus.accesscontrol.vertex.mapper
 
 import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
 import br.com.ntopus.accesscontrol.vertex.User
-import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.*
 import br.com.ntopus.accesscontrol.vertex.validator.UserValidator
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
+import org.apache.tinkerpop.gremlin.structure.Edge
 
 class UserMapper(val properties: Map<String, String>) : IMapper {
     private val user = User(properties)
@@ -37,30 +36,39 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
     }
 
 
-    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
-//        if (!UserValidator().isCorrectVertexTarget(target)) {
-//            return FAILResponse(data = "@UCEE-001 Impossible create edge with target code ${target.code}")
-//        }
-//        val userStorage = UserValidator().hasVertex(this.user.code)
-//                ?: return FAILResponse(data = "@UCEE-002 Impossible find User with code ${this.user.code}")
-//
-//        val accessRuleStorage = UserValidator().hasVertexTarget(target)
-//                ?: return FAILResponse(data ="@UCEE-003 Impossible find Access Rule with code ${target.code}")
-//        try {
-//            userStorage.addEdge(EdgeLabel.ASSOCIATED.label, accessRuleStorage)
-//            graph.tx().commit()
-//        } catch (e: Exception) {
-//            graph.tx().rollback()
-//            return FAILResponse(data = "@UCEE-003 ${e.message.toString()}")
-//        }
-//        val response = EdgeCreated(VertexInfo(VertexLabel.USER.label, this.user.code), target, EdgeLabel.ASSOCIATED.label)
-//        return SUCCESSResponse(data = response)
-        return ProtoResponse.createVertexSuccessResponse()
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.EdgeResponse {
+        if (!UserValidator().isCorrectVertexTarget(target)) {
+            return ProtoResponse.createEdgeErrorResponse(
+                    "@UCEE-001 Impossible create edge with target id ${target.id}"
+            )
+        }
+        val userStorage = UserValidator().hasVertex(this.user.id)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@UCEE-002 Impossible find User with id ${this.user.id}"
+                )
+
+        val accessRuleStorage = UserValidator().hasVertexTarget(target)
+                ?: return ProtoResponse.createEdgeErrorResponse(
+                        "@UCEE-003 Impossible find Access Rule with id ${target.id}"
+                )
+        val edge: Edge
+        try {
+            edge = userStorage.addEdge(EdgeLabel.ASSOCIATED.label, accessRuleStorage)
+            graph.tx().commit()
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            return ProtoResponse.createEdgeErrorResponse("@UCEE-003 ${e.message.toString()}")
+        }
+        val response = EdgeData(VertexInfo(this.user.id, VertexLabel.USER.label), target, EdgeLabel.ASSOCIATED.label,
+                listOf(Property(PropertyLabel.ID.label, edge.id().toString())))
+        return ProtoResponse.createEdgeSuccessResponse(response)
     }
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val user = UserValidator().hasVertex(this.user.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@UUPE-001 Impossible find User with id ${this.user.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@UUPE-001 Impossible find User with id ${this.user.id}"
+                )
 
         if (!UserValidator().canUpdateVertexProperty(properties)) {
             return ProtoResponse.createVertexErrorResponse("@UUPE-002 User property can be updated")
@@ -80,7 +88,9 @@ class UserMapper(val properties: Map<String, String>) : IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val user = UserValidator().hasVertex(this.user.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@UDE-001 Impossible find User with id ${this.user.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@UDE-001 Impossible find User with id ${this.user.id}"
+                )
         try {
             user.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

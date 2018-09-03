@@ -8,12 +8,13 @@ import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import br.com.ntopus.accesscontrol.server.helper.GrpcServerTestHelper
 import br.com.ntopus.accesscontrol.server.helper.IVertexTests
-import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import br.com.ntopus.accesscontrol.vertex.data.*
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -225,5 +226,95 @@ class GrpcServerGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
         Assert.assertFalse(g.V().hasLabel("group").hasId(id+1).hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithSourceThatNotExist() {
+        val source = VertexInfo(this.id+1, "group")
+        val target = VertexInfo(this.id, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@GCEE-002 Impossible find Group with id ${source.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(source.id).hasLabel("group").hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithTargetThatNotExist() {
+        val source = VertexInfo(this.id, "group")
+        val target = VertexInfo(this.id+1, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@GCEE-003 Impossible find Group with id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(target.id).hasLabel("group").hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithIncorrectTarget() {
+        val user = this.createDefaultUser(Date())!!
+        val source = VertexInfo(this.id, "group")
+        val target = VertexInfo(user, "user")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@GCEE-001 Impossible create edge with target id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(this.id).hasLabel("group").both().hasNext())
+    }
+
+    @Test
+    override fun createEdge() {
+        val localGroup = this.createNewGroup()!!
+        val source = VertexInfo(this.id, "group")
+        val target = VertexInfo(localGroup, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        assertEquals("success", response.status)
+        assertEquals("", response.message)
+        this.assertEdgeCreatedSuccess(source, target,"has", response)
+        this.assertHasEdge(source, target, "has")
+    }
+
+    private fun createNewGroup(): Long? {
+        val graph = GraphFactory.open()
+        return try {
+            val group = graph.addVertex(VertexLabel.GROUP.label)
+            group.property(PropertyLabel.NAME.label, "RH")
+            group.property(PropertyLabel.CODE.label, 2)
+            group.property(PropertyLabel.OBSERVATION.label, "This is a RH Group")
+            group.property(PropertyLabel.CREATION_DATE.label, Date())
+            group.property(PropertyLabel.ENABLE.label, true)
+            graph.tx().commit()
+            group.id() as Long
+        } catch (e: Exception) {
+            graph.tx().rollback()
+            null
+        }
     }
 }

@@ -2,9 +2,8 @@ package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-import br.com.ntopus.accesscontrol.vertex.validator.DefaultValidator
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class OrganizationValidator: DefaultValidator() {
@@ -19,7 +18,7 @@ class OrganizationValidator: DefaultValidator() {
 
     override fun hasVertexTarget(target: VertexInfo): Vertex? {
         return try {
-            graph.traversal().V().hasLabel(VertexLabel.UNIT_ORGANIZATION.label).has(PropertyLabel.CODE.label, target.code).next()
+            graph.traversal().V(target.id).hasLabel(VertexLabel.UNIT_ORGANIZATION.label).next()
         } catch (e: Exception) {
             null
         }

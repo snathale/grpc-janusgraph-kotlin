@@ -65,12 +65,12 @@ message VertexInfo {
 message Edge {
     VertexInfo source = 1;
     VertexInfo target = 2;
-    repeated Property property = 3;
+    string edgeLabel = 3;
+    repeated Property property = 4;
 }
 
 message AddEdgeRequest {
     Edge edge = 1;
-    string edgeLabel = 2;
 }
 
 message EdgeResponse {

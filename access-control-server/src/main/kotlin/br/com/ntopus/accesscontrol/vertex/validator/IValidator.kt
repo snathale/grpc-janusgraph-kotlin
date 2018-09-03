@@ -2,7 +2,7 @@ package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.base.ICommon
-import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 interface IValidator {

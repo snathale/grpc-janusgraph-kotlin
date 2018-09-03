@@ -4,7 +4,7 @@ import br.com.ntopus.accesscontrol.factory.GraphFactory
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.base.ICommon
 import br.com.ntopus.accesscontrol.vertex.base.IDefaultCommon
-import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 abstract class DefaultValidator: IValidator {

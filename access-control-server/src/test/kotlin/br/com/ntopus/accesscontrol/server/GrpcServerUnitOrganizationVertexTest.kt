@@ -8,15 +8,14 @@ import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
 import br.com.ntopus.accesscontrol.server.helper.GrpcServerTestHelper
 import br.com.ntopus.accesscontrol.server.helper.IVertexTests
-import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
-import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
+import br.com.ntopus.accesscontrol.vertex.data.*
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -39,9 +38,11 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
 
     private val date: Date = Date()
 
-    private var id: Long = 0
+    private var unitOrganizationId: Long = 0
 
     private val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+
+    private var groupId: Long = 0
 
     @Before
     fun setUp() {
@@ -61,8 +62,8 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
                 // Create a client channel and register for automatic graceful shutdown.
                 grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build())
         )
-        this.id = this.createDefaultUnitOrganization(date)!!
-        this.createDefaultGroup(Date())
+        this.unitOrganizationId = this.createDefaultUnitOrganization(date)!!
+        this.groupId = this.createDefaultGroup(Date())!!
 
     }
 
@@ -87,17 +88,17 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         assertTrue(propertiesMap["enable"]!!.toBoolean())
         this.assertAgentMapper("unitOrganization", "2",
                 "Minas Gerais", format.parse(propertiesMap["creationDate"]),
-                "This is a Unit Organization from Minas Gerais", true, propertiesMap["id"])
+                "This is a Unit Organization from Minas Gerais", true, propertiesMap["unitOrganizationId"])
     }
 
     @Test
     override fun getVertexById() {
         val response = stub!!.getVertexById(
-                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(id).build()
+                AccessControlServer.GetVertexByIdRequest.newBuilder().setId(unitOrganizationId).build()
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAgentVertexGrpcResponse("unitOrganization", id,"1", "Bahia", date, "This is a Unit Organization", true, response)
+        this.assertAgentVertexGrpcResponse("unitOrganization", unitOrganizationId,"1", "Bahia", date, "This is a Unit Organization", true, response)
     }
 
     @Test
@@ -109,7 +110,7 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAgentVertexGrpcResponse("unitOrganization", id, "1", "Bahia", date, "This is a Unit Organization", true, response)
+        this.assertAgentVertexGrpcResponse("unitOrganization", unitOrganizationId, "1", "Bahia", date, "This is a Unit Organization", true, response)
     }
 
     @Test
@@ -189,10 +190,10 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         val properties : List<Property> = listOf(Property("name", "Unit Organization Test"), Property("observation", "Property updated"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("unitOrganization").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(unitOrganizationId).setLabel("unitOrganization").addAllProperty(converter).build())
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertAgentVertexGrpcResponse("unitOrganization", id,"1", "Unit Organization Test", date, "Property updated", true, response)
+        this.assertAgentVertexGrpcResponse("unitOrganization", unitOrganizationId,"1", "Unit Organization Test", date, "Property updated", true, response)
         this.assertAgentMapper("unitOrganization", "1", "Unit Organization Test", date, "Property updated", true)
     }
 
@@ -201,11 +202,11 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         val properties : List<Property> = listOf(Property("name", "Unit Organization Test"), Property("code", "2"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(id).setLabel("unitOrganization").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(unitOrganizationId).setLabel("unitOrganization").addAllProperty(converter).build())
         Assert.assertEquals("error", response.status)
         Assert.assertEquals("@UOUPE-002 Unit Organization property can be updated", response.message)
         Assert.assertFalse(response.hasData())
-        this.assertAgentMapper("unitOrganization", "1", "Bahia", date, "This is a Unit Organization", true, id.toString())
+        this.assertAgentMapper("unitOrganization", "1", "Bahia", date, "This is a Unit Organization", true, unitOrganizationId.toString())
     }
 
     @Test
@@ -230,11 +231,11 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
     @Test
     override fun deleteVertex() {
         val response = stub!!.deleteVertex(
-                AccessControlServer.DeleteVertexRequest.newBuilder().setId(id).setLabel("unitOrganization").build()
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(unitOrganizationId).setLabel("unitOrganization").build()
         )
         Assert.assertEquals("success", response.status)
         Assert.assertFalse(response.hasData())
-        this.assertAgentMapper("unitOrganization", "1", "Bahia",   date, "This is a Unit Organization", false, id.toString())
+        this.assertAgentMapper("unitOrganization", "1", "Bahia",   date, "This is a Unit Organization", false, unitOrganizationId.toString())
     }
 
     @Test
@@ -246,6 +247,78 @@ class GrpcServerUnitOrganizationVertexTest : GrpcServerTestHelper(), IVertexTest
         Assert.assertEquals("@UODE-001 Impossible find Unit Organization with id 1", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("unitOrganization").has("id", 1).hasNext())
+        Assert.assertFalse(g.V().hasLabel("unitOrganization").has("unitOrganizationId", 1).hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithSourceThatNotExist() {
+        val source = VertexInfo(this.unitOrganizationId+1, "unitOrganization")
+        val target = VertexInfo(this.groupId, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel")
+                .add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config)
+                .toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UOCEE-002 Impossible find Unit Organization with id ${this.unitOrganizationId+1}",response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(this.unitOrganizationId+1).hasLabel("unitOrganization").hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithTargetThatNotExist() {
+        val source = VertexInfo(this.unitOrganizationId, "unitOrganization")
+        val target = VertexInfo(this.groupId+1, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel")
+                .add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config)
+                .toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UOCEE-003 Impossible find Group with id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(target.id).hasLabel("group").hasNext())
+    }
+
+    @Test
+    override fun cantCreateEdgeWithIncorrectTarget() {
+        val organizationId = this.createDefaultOrganization(Date())!!
+        val source = VertexInfo(this.unitOrganizationId, "unitOrganization")
+        val target = VertexInfo(organizationId, "organization")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel")
+                .add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config)
+                .toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build())
+        Assert.assertEquals("error", response.status)
+        Assert.assertEquals("@UOCEE-001 Impossible create edge with target id ${target.id}", response.message)
+        Assert.assertFalse(response.hasData())
+        val g = GraphFactory.open().traversal()
+        Assert.assertFalse(g.V(this.unitOrganizationId).hasLabel("unitOrganization").both().hasNext())
+    }
+
+    @Test
+    override fun createEdge() {
+        val source = VertexInfo(this.unitOrganizationId, "unitOrganization")
+        val target = VertexInfo(this.groupId, "group")
+        val edge = EdgeData(source, target)
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "edgeLabel").add(EdgeData::class.java, "properties")
+        val config = Configuration.builder().addIgnoredFields(ignore).build()
+        val converter = Converter.create(config).toProtobuf(AccessControlServer.Edge::class.java, edge)
+        val response = stub!!.addEdge(
+                AccessControlServer.AddEdgeRequest.newBuilder().setEdge(converter).build()
+        )
+        assertEquals("success", response.status)
+        Assert.assertEquals("", response.message)
+        this.assertEdgeCreatedSuccess(source, target,"has", response)
+        this.assertHasEdge(source, target, "has")
     }
 }

@@ -7,12 +7,10 @@ import br.com.ntopus.accesscontrol.vertex.validator.RuleValidator
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.vertex.Rule
 import br.com.ntopus.accesscontrol.vertex.data.Property
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 
 class RuleMapper (val properties: Map<String, String>): IMapper {
-    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.VertexResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     private val rule = Rule(properties)
     private val graph = GraphFactory.open()
@@ -39,10 +37,16 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
         return ProtoResponse.createVertexSuccessResponse(this.rule.mapperToVertexData(VertexLabel.RULE.label))
     }
 
+    override fun createEdge(target: VertexInfo, edgeTarget: String): AccessControlServer.EdgeResponse {
+        return ProtoResponse.createEdgeErrorResponse("@RCEE-001 Impossible create a edge with target id ${this.rule.id}")
+    }
+
 
     override fun updateProperty(properties: List<Property>): AccessControlServer.VertexResponse {
         val rule = RuleValidator().hasVertex(this.rule.id)
-                ?: return ProtoResponse.createVertexErrorResponse("RUPE-001 Impossible find Rule with id ${this.rule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "RUPE-001 Impossible find Rule with id ${this.rule.id}"
+                )
 
         if (!RuleValidator().canUpdateVertexProperty(properties)) {
             return ProtoResponse.createVertexErrorResponse("@RUPE-002 Rule property can be updated")
@@ -61,7 +65,9 @@ class RuleMapper (val properties: Map<String, String>): IMapper {
 
     override fun delete(): AccessControlServer.VertexResponse {
         val rule = RuleValidator().hasVertex(this.rule.id)
-                ?: return ProtoResponse.createVertexErrorResponse("@RDE-001 Impossible find Rule with id ${this.rule.id}")
+                ?: return ProtoResponse.createVertexErrorResponse(
+                        "@RDE-001 Impossible find Rule with id ${this.rule.id}"
+                )
         try {
             rule.property(PropertyLabel.ENABLE.label, false)
             graph.tx().commit()

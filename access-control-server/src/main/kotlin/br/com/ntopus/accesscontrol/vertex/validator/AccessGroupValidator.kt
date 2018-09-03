@@ -2,9 +2,8 @@ package br.com.ntopus.accesscontrol.vertex.validator
 
 import br.com.ntopus.accesscontrol.vertex.data.Property
 import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
+import br.com.ntopus.accesscontrol.vertex.data.VertexInfo
 import br.com.ntopus.accesscontrol.vertex.data.VertexLabel
-import br.com.ntopus.accesscontrol.vertex.mapper.VertexInfo
-import br.com.ntopus.accesscontrol.vertex.validator.DefaultValidator
 import org.apache.tinkerpop.gremlin.structure.Vertex
 
 class AccessGroupValidator: DefaultValidator() {
@@ -21,10 +20,8 @@ class AccessGroupValidator: DefaultValidator() {
         return try {
             val g = graph.traversal()
             when(target.label) {
-                VertexLabel.ACCESS_GROUP.label -> g.V().hasLabel(VertexLabel.ACCESS_GROUP.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
-                VertexLabel.RULE.label -> g.V().hasLabel(VertexLabel.RULE.label)
-                        .has(PropertyLabel.CODE.label, target.code).next()
+                VertexLabel.ACCESS_GROUP.label -> g.V(target.id).hasLabel(VertexLabel.ACCESS_GROUP.label).next()
+                VertexLabel.RULE.label -> g.V(target.id).hasLabel(VertexLabel.RULE.label).next()
                 else -> null
             }
         } catch (e: Exception) {

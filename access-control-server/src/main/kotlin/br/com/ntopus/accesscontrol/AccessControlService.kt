@@ -11,7 +11,9 @@ import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
 import br.com.ntopus.accesscontrol.vertex.data.VertexData
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 import io.grpc.stub.StreamObserver
+import net.badata.protobuf.converter.Configuration
 import net.badata.protobuf.converter.Converter
+import net.badata.protobuf.converter.FieldsIgnore
 import net.badata.protobuf.converter.annotation.ProtoClass
 import net.badata.protobuf.converter.annotation.ProtoField
 
@@ -91,13 +93,19 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
     }
 
     override fun addEdge(request: AccessControlServer.AddEdgeRequest?, responseObserver: StreamObserver<AccessControlServer.EdgeResponse>?) {
+        val ignore = FieldsIgnore().add(EdgeData::class.java, "properties")
+        if (request!!.edge.edgeLabel.isEmpty()) {
+            ignore.add(EdgeData::class.java, "edgeLabel")
+        }
         try {
-            val edge = Converter.create().toDomain(EdgeData::class.java, request!!.edge)
-            val vertex = VertexData(edge.source!!.label, listOf(Property(PropertyLabel.ID.label, edge.source!!.id.toString())))
-            responseObserver?.onNext(MapperFactory.createFactory(vertex).createEdge(edge.target!!, request.edgeLabel))
+            val config = Configuration.builder().addIgnoredFields(ignore).build()
+            val edge = Converter.create(config).toDomain(EdgeData::class.java, request.edge)
+            val vertex = VertexData(edge.source.label, listOf(Property(PropertyLabel.ID.label, edge.source.id.toString())))
+            responseObserver?.onNext(MapperFactory.createFactory(vertex).createEdge(edge.target, request.edge.edgeLabel))
         } catch (e: Exception) {
             responseObserver?.onNext(ProtoResponse
                     .createEdgeErrorResponse("@AEE-001 Impossible create a Edge ${e.message}"))
         }
+        responseObserver?.onCompleted()
     }
 }
