@@ -27,6 +27,9 @@ COPY config/empty-sample.groovy /workspace/janusgraph/scripts/empty-sample.groov
 COPY config/JanusGraphSchemaImporter.groovy /workspace/janusgraph/scripts/JanusGraphSchemaImporter.groovy
 
 WORKDIR /workspace/janusgraph
+RUN chown -R docker:docker /workspace
+RUN chmod 755 /workspace
+USER docker
 RUN bin/gremlin-server.sh -i org.apache.tinkerpop gremlin-python 3.2.6
 
 COPY janusgraph/janusgraph-schema /workspace/janusgraph/schema

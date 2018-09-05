@@ -5,10 +5,7 @@ import br.com.ntopus.accesscontrol.factory.MapperFactory
 import br.com.ntopus.accesscontrol.vertex.mapper.AbstractMapper
 import br.com.ntopus.accesscontrol.proto.AccessControlServer
 import br.com.ntopus.accesscontrol.proto.AccessControlServiceGrpc
-import br.com.ntopus.accesscontrol.vertex.data.EdgeData
-import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
+import br.com.ntopus.accesscontrol.vertex.data.*
 import br.com.ntopus.accesscontrol.vertex.proto.ProtoResponse
 import io.grpc.stub.StreamObserver
 import net.badata.protobuf.converter.Configuration
@@ -16,12 +13,15 @@ import net.badata.protobuf.converter.Converter
 import net.badata.protobuf.converter.FieldsIgnore
 import net.badata.protobuf.converter.annotation.ProtoClass
 import net.badata.protobuf.converter.annotation.ProtoField
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__`.`is`
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__`.both
+import org.apache.tinkerpop.gremlin.structure.Vertex
 
 
 @ProtoClass(AccessControlServer.GetVertexByCodeRequest::class)
 data class VertexByCode(@ProtoField var label: String = "", @ProtoField var code: String = "")
 
-class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBase() {
+class AccessControlService : AccessControlServiceGrpc.AccessControlServiceImplBase() {
 
     override fun addVertex(request: AccessControlServer.AddVertexRequest?, responseObserver: StreamObserver<AccessControlServer.VertexResponse>?) {
         try {
@@ -43,7 +43,7 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
                     .createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoResponse
+            val response = ProtoResponse
                     .createVertexErrorResponse("@GVIE-001 Vertex not found")
             responseObserver?.onNext(response)
         }
@@ -59,7 +59,7 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
                     .createVertexSuccessResponse(AbstractMapper.parseVertexToVertexData(vertex))
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoResponse
+            val response = ProtoResponse
                     .createVertexErrorResponse("@GVCE-001 Vertex not found")
             responseObserver?.onNext(response)
         }
@@ -72,7 +72,7 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
             val response = MapperFactory.createFactory(vertexData).delete()
             responseObserver?.onNext(response)
         } catch (e: Exception) {
-            val response =  ProtoResponse
+            val response = ProtoResponse
                     .createVertexErrorResponse("@ACDV-001 Impossible delete Vertex ${e.message}")
             responseObserver?.onNext(response)
         }
@@ -105,6 +105,45 @@ class AccessControlService: AccessControlServiceGrpc.AccessControlServiceImplBas
         } catch (e: Exception) {
             responseObserver?.onNext(ProtoResponse
                     .createEdgeErrorResponse("@AEE-001 Impossible create a Edge ${e.message}"))
+        }
+        responseObserver?.onCompleted()
+    }
+
+    override fun getEdgeById(request: AccessControlServer.GetEdgeRequestById?, responseObserver: StreamObserver<AccessControlServer.EdgeResponse>?) {
+        try {
+            val g = GraphFactory.open().traversal()
+            val edge = g.E(request!!.id).next()
+            val response = ProtoResponse
+                    .createEdgeSuccessResponse(AbstractMapper.parseEdgeToEdgeData(edge))
+            responseObserver?.onNext(response)
+        } catch (e: Exception) {
+            val response = ProtoResponse
+                    .createEdgeErrorResponse("@GEE-001 Edge not found")
+            responseObserver?.onNext(response)
+        }
+        responseObserver?.onCompleted()
+    }
+
+    override fun hasPermission(request: AccessControlServer.HasPermissionRequest?, responseObserver: StreamObserver<AccessControlServer.HasPermissionResponse>?) {
+        try {
+            val g = GraphFactory.open().traversal()
+            val agent = Converter.create().toDomain(VertexInfo::class.java, request!!.agent)
+            val rule = Converter.create().toDomain(VertexInfo::class.java, request.rule)
+            val vAgent = g.V(agent.id).hasLabel(agent.label).next()
+            //            if (agent.label == VertexLabel.USER.label) {
+            //                val accessRule = vAgent.edges(Direction.OUT, EdgeLabel.ASSOCIATED.label)
+            //            }
+            val vRule = g.V(rule.id).hasLabel(VertexLabel.RULE.label).next()
+            val path = g.V(vAgent).repeat(both().simplePath().until(`is`<Vertex>(vRule))).limit(1).next()
+            println("--------->$path")
+            val response = AccessControlServer.HasPermissionResponse.newBuilder()
+                    .setPermission(true).build()
+            responseObserver?.onNext(response)
+        } catch (e: Exception) {
+            println(e.message)
+            val response = AccessControlServer.HasPermissionResponse.newBuilder()
+                    .setPermission(false).build()
+            responseObserver?.onNext(response)
         }
         responseObserver?.onCompleted()
     }

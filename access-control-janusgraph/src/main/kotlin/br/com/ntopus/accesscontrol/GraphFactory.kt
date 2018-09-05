@@ -1,6 +1,7 @@
 package br.com.ntopus.accesscontrol
 
 import br.com.ntopus.accesscontrol.importer.JanusGraphSchemaImporter
+import org.janusgraph.core.ConfiguredGraphFactory
 import org.janusgraph.core.JanusGraph
 import org.janusgraph.core.JanusGraphFactory
 

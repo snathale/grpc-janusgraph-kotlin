@@ -68,7 +68,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     override fun addVertex() {
-        val properties:List<Property> = listOf(Property("code", "2"),
+        val properties: List<Property> = listOf(Property("code", "2"),
                 Property("name", "New Access Group"),
                 Property("description", "This is a description"),
                 Property("enable", "false"))
@@ -107,8 +107,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun getVertexByCode() {
         val vertex = VertexByCode("accessGroup", "1")
-        val converter = Converter.create().
-                toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
+        val converter = Converter.create().toProtobuf(AccessControlServer.GetVertexByCodeRequest::class.java, vertex)
         val response = stub!!.getVertexByCode(
                 AccessControlServer.GetVertexByCodeRequest.newBuilder(converter).build()
         )
@@ -122,7 +121,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     override fun createVertexWithExtraProperty() {
-        val properties:List<Property> = listOf(Property("code", "2"),
+        val properties: List<Property> = listOf(Property("code", "2"),
                 Property("name", "New Access Group"),
                 Property("description", "This is a description"),
                 Property("enable", "false"),
@@ -194,20 +193,20 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     override fun updateProperty() {
-        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
+        val properties: List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
                 AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessGroupId).setLabel("accessGroup").addAllProperty(converter).build())
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertPermissionVertexGrpcResponse("accessGroup", accessGroupId,"1", "Operator Updated",date, "Property updated", true, response)
-        this.assertPermissionMapper("accessGroup","1", "Operator Updated",date, "Property updated", true, accessGroupId.toString())
+        this.assertPermissionVertexGrpcResponse("accessGroup", accessGroupId, "1", "Operator Updated", date, "Property updated", true, response)
+        this.assertPermissionMapper("accessGroup", "1", "Operator Updated", date, "Property updated", true, accessGroupId.toString())
     }
 
     @Test
     override fun cantUpdateDefaultProperty() {
 
-        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("code", "2"))
+        val properties: List<Property> = listOf(Property("name", "Operator Updated"), Property("code", "2"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
                 AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessGroupId).setLabel("accessGroup").addAllProperty(converter).build())
@@ -219,12 +218,12 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
 
     @Test
     override fun cantUpdatePropertyFromVertexThatNotExist() {
-        val properties : List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
+        val properties: List<Property> = listOf(Property("name", "Operator Updated"), Property("description", "Property updated"))
         val converter = Converter.create().toProtobuf(AccessControlServer.Property::class.java, properties)
         val response = stub!!.updateVertexProperty(
-                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessGroupId+1).setLabel("accessGroup").addAllProperty(converter).build())
+                AccessControlServer.UpdateVertexPropertyRequest.newBuilder().setId(accessGroupId + 1).setLabel("accessGroup").addAllProperty(converter).build())
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@AGUPE-001 Impossible find Access Group with id ${accessGroupId+1}", response.message)
+        Assert.assertEquals("@AGUPE-001 Impossible find Access Group with id ${accessGroupId + 1}", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
         Assert.assertFalse(g.V().hasLabel("accessGroup").has("name", "Operator Updated").has("description", "Property updated").hasNext())
@@ -243,18 +242,18 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun cantDeleteVertexThatNotExist() {
         val response = stub!!.deleteVertex(
-                AccessControlServer.DeleteVertexRequest.newBuilder().setId(accessGroupId+1).setLabel("accessGroup").build()
+                AccessControlServer.DeleteVertexRequest.newBuilder().setId(accessGroupId + 1).setLabel("accessGroup").build()
         )
         Assert.assertEquals("error", response.status)
-        Assert.assertEquals("@AGDE-001 Impossible find Access Group with id ${accessGroupId+1}", response.message)
+        Assert.assertEquals("@AGDE-001 Impossible find Access Group with id ${accessGroupId + 1}", response.message)
         Assert.assertFalse(response.hasData())
         val g = GraphFactory.open().traversal()
-        Assert.assertFalse(g.V().hasLabel("accessGroup").hasId(accessGroupId+1).hasNext())
+        Assert.assertFalse(g.V().hasLabel("accessGroup").hasId(accessGroupId + 1).hasNext())
     }
 
     @Test
     override fun cantCreateEdgeWithSourceThatNotExist() {
-        val source = VertexInfo(this.accessGroupId+1, "accessGroup")
+        val source = VertexInfo(this.accessGroupId + 1, "accessGroup")
         val target = VertexInfo(this.ruleId, "rule")
         val edge = EdgeData(source, target, "inherit")
         val ignore = FieldsIgnore().add(EdgeData::class.java, "properties")
@@ -273,7 +272,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
     @Test
     override fun cantCreateEdgeWithTargetThatNotExist() {
         val source = VertexInfo(this.accessGroupId, "accessGroup")
-        val target = VertexInfo(this.ruleId+1, "rule")
+        val target = VertexInfo(this.ruleId + 1, "rule")
         val edge = EdgeData(source, target, "inherit")
         val ignore = FieldsIgnore().add(EdgeData::class.java, "properties")
         val config = Configuration.builder().addIgnoredFields(ignore).build()
@@ -320,7 +319,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         )
         assertEquals("success", response.status)
         assertEquals("", response.message)
-        this.assertEdgeCreatedSuccess(source, target,"remove", response)
+        this.assertEdgeCreatedSuccess(source, target, "remove", response)
         this.assertHasEdge(source, target, "remove")
     }
 
@@ -355,7 +354,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         )
         Assert.assertEquals("success", response.status)
         Assert.assertEquals("", response.message)
-        this.assertEdgeCreatedSuccess(source, target,"inherit", response)
+        this.assertEdgeCreatedSuccess(source, target, "inherit", response)
         this.assertHasEdge(source, target, "inherit")
     }
 
@@ -372,7 +371,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         )
         Assert.assertEquals("success", response.status)
         Assert.assertEquals("", response.message)
-        this.assertEdgeCreatedSuccess(source, target,"add", response)
+        this.assertEdgeCreatedSuccess(source, target, "add", response)
         this.assertHasEdge(source, target, "add")
 
         val localAccessGroup = this.createNewAccessGroup()!!
@@ -386,7 +385,7 @@ class GrpcServerAccessGroupVertexTest: GrpcServerTestHelper(), IVertexTests {
         )
         Assert.assertEquals("success", response.status)
         Assert.assertEquals("", response.message)
-        this.assertEdgeCreatedSuccess(source, target,"add", response)
+        this.assertEdgeCreatedSuccess(source, target, "add", response)
         this.assertHasEdge(source, target, "add")
     }
 }

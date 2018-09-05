@@ -58,7 +58,7 @@ class JanusGraphJSONSchema(var graph: StandardJanusGraph) {
     }
 
     private fun parse(schemaFile: String): GraphSchema {
-        val gsonFile: File = File(schemaFile)
+        val gsonFile = File(schemaFile)
 
         if (!gsonFile.exists()) {
             throw Exception("[SCHEMA] File not found:" + schemaFile)

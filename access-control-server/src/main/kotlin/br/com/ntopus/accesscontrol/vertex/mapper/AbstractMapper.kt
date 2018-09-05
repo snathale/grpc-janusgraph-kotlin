@@ -1,9 +1,7 @@
 package br.com.ntopus.accesscontrol.vertex.mapper
 
-import br.com.ntopus.accesscontrol.vertex.data.Property
-import br.com.ntopus.accesscontrol.vertex.data.PropertyLabel
-import br.com.ntopus.accesscontrol.vertex.data.VertexData
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal
+import br.com.ntopus.accesscontrol.factory.GraphFactory
+import br.com.ntopus.accesscontrol.vertex.data.*
 import org.apache.tinkerpop.gremlin.structure.Edge
 import org.apache.tinkerpop.gremlin.structure.Vertex
 import java.text.SimpleDateFormat
@@ -30,10 +28,15 @@ object AbstractMapper {
         return format.format(defaultFormat.parse(parseMapValue(date)))
     }
 
-    fun parseMapEdge(edge: GraphTraversal<Vertex, Edge>): Map<String, String> {
-        var values: Map<String, String> = mapOf()
-        edge.valueMap<String>().iterator().forEach {values+=it}
-        return values
+    fun parseEdgeToEdgeData(edge: Edge): EdgeData {
+        var list: List<Property> = listOf()
+        list += Property(PropertyLabel.ID.label, toString(edge.id()))
+        for (item in edge.properties<Edge>()) {
+            list+= Property(item.key(), toString(item.value()))
+        }
+        val source = VertexInfo(edge.outVertex().id() as Long, edge.outVertex().label())
+        val target = VertexInfo(edge.inVertex().id() as Long, edge.inVertex().label())
+        return EdgeData(source, target, edge.label(), list)
     }
 
     fun parseVertexToVertexData(vertex: Vertex): VertexData {

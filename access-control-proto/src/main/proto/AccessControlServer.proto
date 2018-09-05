@@ -11,7 +11,8 @@ service AccessControlService {
     rpc DeleteVertex (DeleteVertexRequest) returns (VertexResponse) {}
     rpc UpdateVertexProperty (UpdateVertexPropertyRequest) returns (VertexResponse) {}
     rpc AddEdge (AddEdgeRequest) returns (EdgeResponse) {}
-    rpc GetEdge (GetEdgeRequest) returns (EdgeResponse) {}
+    rpc GetEdgeById (GetEdgeRequestById) returns (EdgeResponse) {}
+    rpc HasPermission (HasPermissionRequest) returns (HasPermissionResponse) {}
 }
 
 message Vertex {
@@ -79,6 +80,15 @@ message EdgeResponse {
     string message = 3;
 }
 
-message GetEdgeRequest {
-    int64 id = 1;
+message GetEdgeRequestById {
+    string id = 1;
+}
+
+message HasPermissionRequest {
+    VertexInfo agent = 1;
+    VertexInfo rule = 2;
+}
+
+message HasPermissionResponse {
+    bool permission = 1;
 }

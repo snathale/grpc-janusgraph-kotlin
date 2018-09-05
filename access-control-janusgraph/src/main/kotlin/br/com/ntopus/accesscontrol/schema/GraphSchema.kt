@@ -1,5 +1,7 @@
 package br.com.ntopus.accesscontrol.schema
 
+import org.janusgraph.core.ConfiguredGraphFactory
+import org.janusgraph.core.JanusGraph
 import org.janusgraph.core.schema.JanusGraphManagement
 
 class GraphSchema {
